@@ -1,6 +1,5 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import axios from 'axios';
-import * as https from 'https';
 
 @Injectable()
 export class AuthAppService {
@@ -13,7 +12,7 @@ export class AuthAppService {
     return { Authorization: `Bearer ${token}` };
   }
 
-  private async getValidToken(): Promise<string> {
+  async getValidToken(): Promise<string> {
     if (this.token && this.tokenExpiresAt && Date.now() < this.tokenExpiresAt) {
       return this.token;
     }
