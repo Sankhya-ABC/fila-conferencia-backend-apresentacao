@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { UsersApiClient } from './clients/users-api.client';
-import { UserDto } from './dto/users.dto';
+import { UsuariosClient } from './client/usuarios.client';
+import { UsuarioDTO } from './dto/usuarios.dto';
 
 @Injectable()
-export class UsersService {
-  private client = new UsersApiClient();
+export class UsuariosService {
+  private client = new UsuariosClient();
 
-  create(dto: UserDto) {
+  create(dto: UsuarioDTO) {
     return this.client.create(dto);
   }
 
@@ -18,7 +18,7 @@ export class UsersService {
     return this.client.findById(id);
   }
 
-  update(id: string, dto: UserDto) {
+  update(id: string, dto: UsuarioDTO) {
     return this.client.update(id, dto);
   }
 

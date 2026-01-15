@@ -8,18 +8,18 @@ import {
   Put,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
-import { UsersService } from './users.service';
-import { UserDto } from './dto/users.dto';
+import { UsuariosService } from './usuarios.service';
+import { UsuarioDTO } from './dto/usuarios.dto';
 
-@ApiTags('Users')
-@Controller('users')
-export class UsersController {
-  constructor(private readonly service: UsersService) {}
+@ApiTags('Usuários')
+@Controller('usuarios')
+export class UsuariosController {
+  constructor(private readonly service: UsuariosService) {}
 
   @Post()
   @ApiOperation({ summary: 'Criar usuário' })
   @ApiResponse({ status: 201, description: 'Usuário criado com sucesso' })
-  create(@Body() dto: UserDto) {
+  create(@Body() dto: UsuarioDTO) {
     return this.service.create(dto);
   }
 
@@ -38,7 +38,7 @@ export class UsersController {
 
   @Put(':id')
   @ApiOperation({ summary: 'Atualizar usuário' })
-  update(@Param('id') id: string, @Body() dto: UserDto) {
+  update(@Param('id') id: string, @Body() dto: UsuarioDTO) {
     return this.service.update(id, dto);
   }
 

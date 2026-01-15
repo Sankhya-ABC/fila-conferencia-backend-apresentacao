@@ -4,13 +4,13 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthAppGuard } from './auth-app/auth-app.guard';
 import { AuthAppModule } from './auth-app/auth-app.module';
-import { UsersModule } from './users/users.module';
+import { UsuariosModule } from './usuarios/usuarios.module';
 import { ConfigModule } from '@nestjs/config';
 import { envMapping, envSchema } from './config/env.schema';
 
 @Module({
   imports: [
-    UsersModule,
+    UsuariosModule,
     AuthAppModule,
     ConfigModule.forRoot({
       isGlobal: true,
