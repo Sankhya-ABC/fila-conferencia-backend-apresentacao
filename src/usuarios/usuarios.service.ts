@@ -1,28 +1,31 @@
 import { Injectable } from '@nestjs/common';
-import { UsuariosClient } from './client/usuarios.client';
+import { HttpClient } from 'src/http-client/http-client';
 import { UsuarioDTO } from './dto/usuarios.dto';
 
 @Injectable()
-export class UsuariosService {
-  private client = new UsuariosClient();
-
-  create(dto: UsuarioDTO) {
-    return this.client.create(dto);
+export class UsuariosService extends HttpClient {
+  async create(data: UsuarioDTO) {
+    const r = await this.client.post('/usuarios', data);
+    return r.data;
   }
 
-  findAll() {
-    return this.client.findAll();
+  async findAll() {
+    const r = await this.client.get('/usuarios');
+    return r.data;
   }
 
-  findOne(id: string) {
-    return this.client.findById(id);
+  async findById(id: string) {
+    const r = await this.client.get(`/usuarios/${id}`);
+    return r.data;
   }
 
-  update(id: string, dto: UsuarioDTO) {
-    return this.client.update(id, dto);
+  async update(id: string, data: UsuarioDTO) {
+    const r = await this.client.put(`/usuarios/${id}`, data);
+    return r.data;
   }
 
-  remove(id: string) {
-    return this.client.delete(id);
+  async delete(id: string) {
+    const r = await this.client.delete(`/usuarios/${id}`);
+    return r.data;
   }
 }

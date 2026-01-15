@@ -24,7 +24,7 @@ export class UsuariosController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Listar usuários' })
+  @ApiOperation({ summary: 'Listar todos usuários' })
   findAll() {
     return this.service.findAll();
   }
@@ -32,8 +32,8 @@ export class UsuariosController {
   @Get(':id')
   @ApiOperation({ summary: 'Buscar usuário por ID' })
   @ApiParam({ name: 'id', example: 'uuid' })
-  findOne(@Param('id') id: string) {
-    return this.service.findOne(id);
+  findById(@Param('id') id: string) {
+    return this.service.findById(id);
   }
 
   @Put(':id')
@@ -43,8 +43,8 @@ export class UsuariosController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Remover usuário' })
-  remove(@Param('id') id: string) {
-    return this.service.remove(id);
+  @ApiOperation({ summary: 'Deletar usuário' })
+  delete(@Param('id') id: string) {
+    return this.service.delete(id);
   }
 }
