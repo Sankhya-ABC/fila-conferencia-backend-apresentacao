@@ -17,33 +17,33 @@ export class UsuariosController {
   constructor(private readonly service: UsuariosService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Criar usuário' })
+  @ApiOperation({ summary: 'Criar Usuário' })
   @ApiResponse({ status: 201, description: 'Usuário criado com sucesso' })
   create(@Body() dto: UsuarioDTO) {
     return this.service.create(dto);
   }
 
   @Get()
-  @ApiOperation({ summary: 'Listar todos usuários' })
+  @ApiOperation({ summary: 'Listar todos Usuários' })
   findAll() {
     return this.service.findAll();
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Buscar usuário por ID' })
+  @ApiOperation({ summary: 'Buscar Usuário por ID' })
   @ApiParam({ name: 'id', example: 'uuid' })
   findById(@Param('id') id: string) {
     return this.service.findById(id);
   }
 
   @Put(':id')
-  @ApiOperation({ summary: 'Atualizar usuário' })
+  @ApiOperation({ summary: 'Atualizar Usuário' })
   update(@Param('id') id: string, @Body() dto: UsuarioDTO) {
     return this.service.update(id, dto);
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Deletar usuário' })
+  @ApiOperation({ summary: 'Deletar Usuário' })
   delete(@Param('id') id: string) {
     return this.service.delete(id);
   }
