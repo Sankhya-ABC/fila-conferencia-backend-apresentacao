@@ -1,8 +1,11 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 
 @Injectable()
 export class AuthAppService {
+  constructor(private config: ConfigService) {}
+
   private token: string | null = null;
   private tokenExpiresAt: number | null = null;
 
@@ -24,16 +27,19 @@ export class AuthAppService {
     try {
       const form = new URLSearchParams();
       form.append('grant_type', 'client_credentials');
-      form.append('client_id', process.env.SNK_CLIENT_ID!);
-      form.append('client_secret', process.env.SNK_CLIENT_SECRET!);
+      form.append('client_id', this.config.get<string>('SNK_CLIENT_ID')!);
+      form.append(
+        'client_secret',
+        this.config.get<string>('SNK_CLIENT_SECRET')!,
+      );
 
       const response = await axios.post(
-        `${process.env.SNK_HOST}/authenticate`,
+        `${this.config.get<string>('SNK_HOST')}/authenticate`,
         form.toString(),
         {
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
-            'X-Token': process.env.SNK_X_TOKEN!,
+            'X-Token': this.config.get<string>('SNK_X_TOKEN')!,
             Accept: 'application/json',
           },
         },
