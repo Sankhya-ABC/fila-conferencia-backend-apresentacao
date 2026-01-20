@@ -8,7 +8,7 @@ import axios, {
 import { AuthAppService } from 'src/auth-app/auth-app.service';
 
 @Injectable()
-export class HttpClient {
+export class GatewayClient {
   public readonly client: AxiosInstance;
 
   constructor(
@@ -16,7 +16,7 @@ export class HttpClient {
     private authAppService: AuthAppService,
   ) {
     this.client = axios.create({
-      baseURL: config.getOrThrow('SNK_GATEWAY'),
+      baseURL: `${config.getOrThrow('SNK_HOST')}/${config.getOrThrow('SNK_GATEWAY')}`,
       timeout: 10000,
     });
 

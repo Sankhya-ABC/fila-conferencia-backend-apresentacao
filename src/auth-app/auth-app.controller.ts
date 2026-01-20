@@ -3,7 +3,7 @@ import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { AuthAppService } from './auth-app.service';
 import { NoAuthApp } from './no-auth-app.decorator';
 
-@ApiTags('Auth App')
+@ApiTags('App')
 @Controller('auth-app')
 export class AuthAppController {
   constructor(private readonly authAppService: AuthAppService) {}
