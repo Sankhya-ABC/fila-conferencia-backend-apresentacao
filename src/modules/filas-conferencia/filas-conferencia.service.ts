@@ -1,10 +1,14 @@
 import { Injectable } from '@nestjs/common';
+import { SankhyaDBExplorerSPClient } from 'src/http-client/db-explorer-sp/db-explorer-sp.client';
 import { GatewayClient } from 'src/http-client/gateway/gateway.client';
 import { FilaConferenciaDTO } from './dto/filas-conferencia.dto';
 
 @Injectable()
 export class FilasConferenciaService {
-  constructor(private readonly gateway: GatewayClient) {}
+  constructor(
+    private readonly gateway: GatewayClient,
+    private readonly dbExplorerClient: SankhyaDBExplorerSPClient,
+  ) {}
 
   async create(data: FilaConferenciaDTO) {
     const response = await this.gateway.client.post('/filas-conferencia', data);
@@ -12,7 +16,8 @@ export class FilasConferenciaService {
   }
 
   async findAll() {
-    const response = await this.gateway.client.get('/filas-conferencia');
+    const sql = `SELECT CAB.NUNOTA AS NUNOTA, CAB.NUMNOTA AS NUMNOTA, EMP.CODEMP AS CODEMP, EMP.RAZAOSOCIAL AS EMPRESA, OPC_TIPMOV.OPCAO AS TIPMOV, PAR.CODPARC AS CODPARC, PAR.RAZAOSOCIAL AS PARCEIRO, VEN.CODVEND AS CODVEND, VEN.APELIDO AS VENDEDOR, CAB.VLRNOTA AS VLRNOTA, CAB.CODUSUINC AS CODUSUINC, CAB.CODUSU AS CODUSUALT, OPC_STATUSCONF.OPCAO AS STATUS_CONFERENCIA FROM TGFCAB CAB LEFT JOIN TSIEMP EMP ON EMP.CODEMP = CAB.CODEMP LEFT JOIN TGFPAR PAR ON PAR.CODPARC = CAB.CODPARC LEFT JOIN TGFVEN VEN ON VEN.CODVEND = CAB.CODVEND  LEFT JOIN TDDOPC OPC_TIPMOV  ON OPC_TIPMOV.NUCAMPO = 739  AND OPC_TIPMOV.VALOR = CAB.TIPMOV LEFT JOIN TDDOPC OPC_STATUSCONF ON OPC_STATUSCONF.NUCAMPO = 64923  AND sankhya.SNK_GET_SATUSCONFERENCIA(CAB.NUNOTA) =  OPC_STATUSCONF.VALOR WHERE  sankhya.SNK_GET_SATUSCONFERENCIA(CAB.NUNOTA) IN ('A', 'AC', 'R', 'RA', 'Z')`;
+    const response = await this.dbExplorerClient.executeQuery(sql);
     return response.data;
   }
 

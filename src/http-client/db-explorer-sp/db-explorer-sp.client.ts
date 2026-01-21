@@ -1,12 +1,6 @@
-import { Injectable, HttpException } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { GatewayClient } from '../gateway/gateway.client';
-
-type DbExplorerParam = {
-  name: string;
-  value: string | number;
-  type?: 'S' | 'N' | 'D';
-};
 
 @Injectable()
 export class SankhyaDBExplorerSPClient {
@@ -14,39 +8,20 @@ export class SankhyaDBExplorerSPClient {
 
   constructor(
     private readonly gateway: GatewayClient,
-    configService: ConfigService,
+    config: ConfigService,
   ) {
-    this.endpoint = configService.getOrThrow('SNK_EXECUTE_QUERY');
+    this.endpoint = `/${config.getOrThrow('SNK_EXECUTE_QUERY')}`;
   }
 
-  async executeQuery(
-    sql: string,
-    params: DbExplorerParam[] = [],
-  ): Promise<any[]> {
+  async executeQuery(sql: string): Promise<any> {
     const body = {
       serviceName: 'DbExplorerSP.executeQuery',
-      requestBody: {
-        sql,
-        parameters: params.map((p) => ({
-          name: p.name,
-          value: {
-            $: p.value,
-            type: p.type ?? 'S',
-          },
-        })),
-      },
+      requestBody: { sql },
     };
 
     try {
       const response = await this.gateway.client.post(this.endpoint, body);
-
-      let rows = response.data?.responseBody?.rows?.row ?? [];
-
-      if (!Array.isArray(rows)) {
-        rows = [rows];
-      }
-
-      return rows;
+      return response;
     } catch (error: any) {
       throw new HttpException(
         error?.response?.data || 'Erro ao executar DbExplorerSP',

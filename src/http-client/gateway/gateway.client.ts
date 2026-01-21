@@ -24,16 +24,30 @@ export class GatewayClient {
       async (req: InternalAxiosRequestConfig) => {
         const token = await this.authAppService.getValidToken();
 
-        if (!req.headers) {
-          req.headers = new AxiosHeaders();
-        } else if (!(req.headers instanceof AxiosHeaders)) {
-          req.headers = new AxiosHeaders(req.headers);
-        }
-
+        req.headers = new AxiosHeaders(req.headers);
         req.headers.set('Authorization', `Bearer ${token}`);
         req.headers.set('Content-Type', 'application/json');
 
+        // console.log('--- SANKHYA REQUEST ---');
+        // console.log('METHOD:', req.method?.toUpperCase());
+        // console.log('URL:', `${req.baseURL}${req.url}`);
+        // console.log('HEADERS:', req.headers.toJSON());
+        // console.log('BODY:', req.data);
+        // console.log('----------------------');
+
         return req;
+      },
+    );
+
+    this.client.interceptors.response.use(
+      (res) => res,
+      (error) => {
+        // console.error('--- SANKHYA ERROR ---');
+        // console.error('STATUS:', error?.response?.status);
+        // console.error('URL:', error?.config?.baseURL + error?.config?.url);
+        // console.error('RESPONSE:', error?.response?.data);
+        // console.error('---------------------');
+        return Promise.reject(error);
       },
     );
   }
