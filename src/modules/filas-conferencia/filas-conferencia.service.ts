@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { SankhyaDBExplorerSPClient } from 'src/http-client/db-explorer-sp/db-explorer-sp.client';
 import { GatewayClient } from 'src/http-client/gateway/gateway.client';
-import { FilaConferenciaDTO } from './dto/filas-conferencia.dto';
 
 @Injectable()
 export class FilasConferenciaService {
@@ -9,11 +8,6 @@ export class FilasConferenciaService {
     private readonly gateway: GatewayClient,
     private readonly dbExplorerClient: SankhyaDBExplorerSPClient,
   ) {}
-
-  async create(data: FilaConferenciaDTO) {
-    const response = await this.gateway.client.post('/filas-conferencia', data);
-    return response.data;
-  }
 
   async findAll() {
     const sql = `
@@ -44,25 +38,5 @@ export class FilasConferenciaService {
     `;
     const response = await this.dbExplorerClient.executeQuery(sql);
     return response;
-  }
-
-  async findById(id: string) {
-    const response = await this.gateway.client.get(`/filas-conferencia/${id}`);
-    return response.data;
-  }
-
-  async update(id: string, data: FilaConferenciaDTO) {
-    const response = await this.gateway.client.put(
-      `/filas-conferencia/${id}`,
-      data,
-    );
-    return response.data;
-  }
-
-  async delete(id: string) {
-    const response = await this.gateway.client.delete(
-      `/filas-conferencia/${id}`,
-    );
-    return response.data;
   }
 }

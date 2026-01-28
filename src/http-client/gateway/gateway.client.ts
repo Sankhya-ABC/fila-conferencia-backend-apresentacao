@@ -17,7 +17,7 @@ export class GatewayClient {
   ) {
     this.client = axios.create({
       baseURL: `${config.getOrThrow('SNK_HOST')}/${config.getOrThrow('SNK_GATEWAY')}`,
-      timeout: 10000,
+      timeout: 30000,
     });
 
     this.client.interceptors.request.use(
