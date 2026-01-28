@@ -7,11 +7,13 @@ export class FilasConferenciaService {
 
   async getFilaConferencias() {
     const sql = `
-    SELECT CAB.NUNOTA AS numeroUnico, 
+    SELECT 
+    CAB.NUNOTA AS numeroUnico, 
     CAB.NUMNOTA AS numeroNota, 
     EMP.CODEMP AS idEmpresa, 
     EMP.RAZAOSOCIAL AS nomeEmpresa, 
-    OPC_TIPMOV.OPCAO AS tipoMovimento, 
+    CAB.TIPMOV AS codigoTipoMovimento, 
+    OPC_TIPMOV.OPCAO AS descricaoTipoMovimento, 
     PAR.CODPARC AS idParceiro, 
     PAR.RAZAOSOCIAL AS nomeParceiro, 
     VEN.CODVEND AS idVendedor, 
@@ -22,16 +24,40 @@ export class FilasConferenciaService {
     CAB.VOLUME AS volume, 
     CAB.DTMOV AS dataMovimento, 
     CAB.AD_NUMTALAO AS numeroModial, 
-    OPC_STATUSCONF.OPCAO AS status,
-	  TPO.CODTIPOPER AS codigoTipoOperacao,
-  	TPO.DESCROPER AS nomeTipoOperacao 
+    sankhya.SNK_GET_SATUSCONFERENCIA(CAB.NUNOTA) AS codigoStatus, 
+    OPC_STATUSCONF.OPCAO AS descricaoStatus, 
+    TPO.CODTIPOPER AS codigoTipoOperacao, 
+    TPO.DESCROPER AS descricaoTipoOperacao, 
+    CAB.AD_TIPOENTREGA AS codigoTipoEntrega, 
+    OPC_TIPOENTREGA.OPCAO AS descricaoTipoEntrega 
+
     FROM TGFCAB CAB 
-    LEFT JOIN TSIEMP EMP ON EMP.CODEMP = CAB.CODEMP 
-    LEFT JOIN TGFPAR PAR ON PAR.CODPARC = CAB.CODPARC 
-    LEFT JOIN TGFVEN VEN ON VEN.CODVEND = CAB.CODVEND 
-  	LEFT JOIN TGFTOP TPO ON TPO.CODTIPOPER = CAB.CODTIPOPER AND TPO.DHALTER = CAB.DHTIPOPER 
-    LEFT JOIN TDDOPC OPC_TIPMOV ON OPC_TIPMOV.NUCAMPO = 739 AND OPC_TIPMOV.VALOR = CAB.TIPMOV 
-    LEFT JOIN TDDOPC OPC_STATUSCONF ON OPC_STATUSCONF.NUCAMPO = 64923 AND sankhya.SNK_GET_SATUSCONFERENCIA(CAB.NUNOTA) = OPC_STATUSCONF.VALOR 
+
+    LEFT JOIN TSIEMP EMP 
+    ON EMP.CODEMP = CAB.CODEMP 
+
+    LEFT JOIN TGFPAR PAR 
+    ON PAR.CODPARC = CAB.CODPARC 
+
+    LEFT JOIN TGFVEN VEN 
+    ON VEN.CODVEND = CAB.CODVEND 
+
+    LEFT JOIN TGFTOP TPO 
+    ON TPO.CODTIPOPER = CAB.CODTIPOPER 
+    AND TPO.DHALTER = CAB.DHTIPOPER 
+
+    LEFT JOIN TDDOPC OPC_TIPMOV 
+    ON OPC_TIPMOV.NUCAMPO = 739 
+    AND OPC_TIPMOV.VALOR = CAB.TIPMOV 
+
+    LEFT JOIN TDDOPC OPC_STATUSCONF 
+    ON OPC_STATUSCONF.NUCAMPO = 64923 
+    AND OPC_STATUSCONF.VALOR = sankhya.SNK_GET_SATUSCONFERENCIA(CAB.NUNOTA) 
+
+    LEFT JOIN TDDOPC OPC_TIPOENTREGA 
+    ON OPC_TIPOENTREGA.NUCAMPO = 9999990877 
+    AND OPC_TIPOENTREGA.VALOR = CAB.AD_TIPOENTREGA 
+
     WHERE sankhya.SNK_GET_SATUSCONFERENCIA(CAB.NUNOTA) IN ('A', 'AC', 'R', 'RA', 'Z') 
     `;
     const response = await this.dbExplorerClient.executeQuery(sql);
@@ -43,8 +69,11 @@ export class FilasConferenciaService {
     SELECT 
     OPC.VALOR AS codigo, 
     OPC.OPCAO AS descricao 
+
     FROM TDDOPC OPC 
+
     WHERE OPC.NUCAMPO = 64923 
+
     ORDER BY OPC.VALOR 
     `;
     const response = await this.dbExplorerClient.executeQuery(sql);
@@ -56,8 +85,11 @@ export class FilasConferenciaService {
     SELECT 
     OPC.VALOR AS codigo, 
     OPC.OPCAO AS descricao 
+
     FROM TDDOPC OPC 
+
     WHERE OPC.NUCAMPO = 739 
+
     ORDER BY OPC.VALOR 
     `;
     const response = await this.dbExplorerClient.executeQuery(sql);
@@ -67,17 +99,20 @@ export class FilasConferenciaService {
   async getTipoOperacao() {
     const sql = `
     SELECT 
-      TPO.CODTIPOPER AS codigo, 
-      TPO.DESCROPER AS descricao 
+    TPO.CODTIPOPER AS codigo, 
+    TPO.DESCROPER AS descricao 
+
     FROM TGFTOP TPO 
+
     WHERE TPO.ATIVO = 'S' 
-      AND TPO.DHALTER = ( 
-        SELECT MAX(TPO2.DHALTER) 
-        FROM TGFTOP TPO2 
-        WHERE TPO2.CODTIPOPER = TPO.CODTIPOPER 
-      ) 
+    AND TPO.DHALTER = ( 
+    SELECT MAX(TPO2.DHALTER) 
+    FROM TGFTOP TPO2 
+    WHERE TPO2.CODTIPOPER = TPO.CODTIPOPER 
+    ) 
+
     ORDER BY TPO.CODTIPOPER 
-  `;
+    `;
     const response = await this.dbExplorerClient.executeQuery(sql);
     return response;
   }
@@ -87,10 +122,13 @@ export class FilasConferenciaService {
     SELECT 
     OPC.VALOR AS codigo, 
     OPC.OPCAO AS descricao 
+
     FROM TDDOPC OPC 
+
     WHERE OPC.NUCAMPO = 9999990877 
+    
     ORDER BY OPC.VALOR 
-  `;
+    `;
     const response = await this.dbExplorerClient.executeQuery(sql);
     return response;
   }
