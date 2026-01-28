@@ -13,6 +13,13 @@ async function bootstrap() {
     new FastifyAdapter({ logger: true }),
   );
 
+  app.enableCors({
+    origin: ['http://localhost:4200'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+  });
+
   app.setGlobalPrefix('api');
 
   app.useGlobalPipes(
