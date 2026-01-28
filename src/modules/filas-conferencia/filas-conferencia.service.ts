@@ -10,26 +10,35 @@ export class FilasConferenciaService {
     SELECT 
     CAB.NUNOTA AS numeroUnico, 
     CAB.NUMNOTA AS numeroNota, 
-    EMP.CODEMP AS idEmpresa, 
-    EMP.RAZAOSOCIAL AS nomeEmpresa, 
-    CAB.TIPMOV AS codigoTipoMovimento, 
-    OPC_TIPMOV.OPCAO AS descricaoTipoMovimento, 
-    PAR.CODPARC AS idParceiro, 
-    PAR.RAZAOSOCIAL AS nomeParceiro, 
-    VEN.CODVEND AS idVendedor, 
-    VEN.APELIDO AS nomeVendedor, 
+    CAB.AD_NUMTALAO AS numeroModial, 
+
     CAB.VLRNOTA AS valorNota, 
-    CAB.CODUSUINC AS idUsuarioInclusao, 
-    CAB.CODUSU AS idUsuarioAlteracao, 
     CAB.VOLUME AS volume, 
     CAB.DTMOV AS dataMovimento, 
-    CAB.AD_NUMTALAO AS numeroModial, 
+
     sankhya.SNK_GET_SATUSCONFERENCIA(CAB.NUNOTA) AS codigoStatus, 
     OPC_STATUSCONF.OPCAO AS descricaoStatus, 
+
+    CAB.TIPMOV AS codigoTipoMovimento, 
+    OPC_TIPMOV.OPCAO AS descricaoTipoMovimento, 
+
     TPO.CODTIPOPER AS codigoTipoOperacao, 
     TPO.DESCROPER AS descricaoTipoOperacao, 
+
     CAB.AD_TIPOENTREGA AS codigoTipoEntrega, 
-    OPC_TIPOENTREGA.OPCAO AS descricaoTipoEntrega 
+    OPC_TIPOENTREGA.OPCAO AS descricaoTipoEntrega, 
+
+    EMP.CODEMP AS idEmpresa, 
+    EMP.RAZAOSOCIAL AS nomeEmpresa, 
+
+    PAR.CODPARC AS idParceiro, 
+    PAR.RAZAOSOCIAL AS nomeParceiro, 
+
+    VEN.CODVEND AS idVendedor, 
+    VEN.APELIDO AS nomeVendedor, 
+
+    CAB.CODUSUINC AS idUsuarioInclusao, 
+    CAB.CODUSU AS idUsuarioAlteracao 
 
     FROM TGFCAB CAB 
 
