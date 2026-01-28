@@ -13,6 +13,25 @@ export class SankhyaDBExplorerSPClient {
     this.endpoint = `/${config.getOrThrow('SNK_EXECUTE_QUERY')}`;
   }
 
+  buildDbExplorerResponse(response: any): Array<Record<string, any>> {
+    const fieldsMetadata = response?.responseBody?.fieldsMetadata;
+    const rows = response?.responseBody?.rows;
+
+    if (!Array.isArray(fieldsMetadata) || !Array.isArray(rows)) {
+      return [];
+    }
+
+    return rows.map((row) => {
+      return fieldsMetadata.reduce(
+        (acc, field, index) => {
+          acc[field.name] = row[index] ?? null;
+          return acc;
+        },
+        {} as Record<string, any>,
+      );
+    });
+  }
+
   async executeQuery(sql: string): Promise<any> {
     const body = {
       serviceName: 'DbExplorerSP.executeQuery',
@@ -21,7 +40,7 @@ export class SankhyaDBExplorerSPClient {
 
     try {
       const response = await this.gateway.client.post(this.endpoint, body);
-      return response;
+      return this.buildDbExplorerResponse(response.data);
     } catch (error: any) {
       throw new HttpException(
         error?.response?.data || 'Erro ao executar DbExplorerSP',
