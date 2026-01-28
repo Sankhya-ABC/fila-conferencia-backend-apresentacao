@@ -38,7 +38,10 @@ export class FilasConferenciaService {
     VEN.APELIDO AS nomeVendedor, 
 
     CAB.CODUSUINC AS idUsuarioInclusao, 
-    CAB.CODUSU AS idUsuarioAlteracao 
+    USU_INC.NOMEUSU AS nomeUsuarioInclusao, 
+
+    CAB.CODUSU AS idUsuarioAlteracao, 
+    USU_ALT.NOMEUSU AS nomeUsuarioAlteracao 
 
     FROM TGFCAB CAB 
 
@@ -54,6 +57,12 @@ export class FilasConferenciaService {
     LEFT JOIN TGFTOP TPO 
     ON TPO.CODTIPOPER = CAB.CODTIPOPER 
     AND TPO.DHALTER = CAB.DHTIPOPER 
+
+    LEFT JOIN TSIUSU USU_INC 
+    ON USU_INC.CODUSU = CAB.CODUSUINC 
+
+    LEFT JOIN TSIUSU USU_ALT 
+    ON USU_ALT.CODUSU = CAB.CODUSU 
 
     LEFT JOIN TDDOPC OPC_TIPMOV 
     ON OPC_TIPMOV.NUCAMPO = 739 
