@@ -1,15 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { SankhyaDBExplorerSPClient } from 'src/http-client/db-explorer-sp/db-explorer-sp.client';
-import { GatewayClient } from 'src/http-client/gateway/gateway.client';
 
 @Injectable()
 export class FilasConferenciaService {
-  constructor(
-    private readonly gateway: GatewayClient,
-    private readonly dbExplorerClient: SankhyaDBExplorerSPClient,
-  ) {}
+  constructor(private readonly dbExplorerClient: SankhyaDBExplorerSPClient) {}
 
-  async findAll() {
+  async getFilaConferencias() {
     const sql = `
     SELECT CAB.NUNOTA AS numeroUnico, 
     CAB.NUMNOTA AS numeroNota, 
@@ -41,4 +37,23 @@ export class FilasConferenciaService {
     const response = await this.dbExplorerClient.executeQuery(sql);
     return response;
   }
+
+  async getStatus() {
+    const sql = `
+    SELECT 
+    OPC.VALOR AS codigo, 
+    OPC.OPCAO AS descricao 
+    FROM TDDOPC OPC 
+    WHERE OPC.NUCAMPO = 64923 
+    ORDER BY OPC.VALOR 
+    `;
+    const response = await this.dbExplorerClient.executeQuery(sql);
+    return response;
+  }
+
+  async getTipoMovimento() {}
+
+  async getTipoOperacao() {}
+
+  async getTipoEntrega() {}
 }
