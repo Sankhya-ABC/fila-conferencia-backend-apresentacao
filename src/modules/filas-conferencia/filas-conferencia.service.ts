@@ -78,7 +78,8 @@ export class FilasConferenciaService {
       ) 
     ORDER BY TPO.CODTIPOPER 
   `;
-    return this.dbExplorerClient.executeQuery(sql);
+    const response = await this.dbExplorerClient.executeQuery(sql);
+    return response;
   }
 
   async getTipoEntrega() {
@@ -90,6 +91,7 @@ export class FilasConferenciaService {
     WHERE OPC.NUCAMPO = 9999990877 
     ORDER BY OPC.VALOR 
   `;
-    return this.dbExplorerClient.executeQuery(sql);
+    const response = await this.dbExplorerClient.executeQuery(sql);
+    return response;
   }
 }
