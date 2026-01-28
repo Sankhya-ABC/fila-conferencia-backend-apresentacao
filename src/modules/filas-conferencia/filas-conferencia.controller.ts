@@ -1,5 +1,6 @@
-import { Controller, Get } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Controller, Get, Query } from '@nestjs/common';
+import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { FilaConferenciaFilter } from './dto/filas-conferencia.dto';
 import { FilasConferenciaService } from './filas-conferencia.service';
 
 @ApiTags('Filas de Conferência')
@@ -9,8 +10,9 @@ export class FilasConferenciaController {
 
   @Get()
   @ApiOperation({ summary: 'Listar todas Filas de Conferência com Filtro' })
-  getFilaConferencias() {
-    return this.service.getFilaConferencias();
+  @ApiQuery({ type: FilaConferenciaFilter })
+  getFilaConferencias(@Query() queryParams: FilaConferenciaFilter) {
+    return this.service.getFilaConferencias(queryParams);
   }
 
   @Get('status')

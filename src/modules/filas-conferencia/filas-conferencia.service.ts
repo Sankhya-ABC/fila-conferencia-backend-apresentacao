@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { SankhyaDBExplorerSPClient } from 'src/http-client/db-explorer-sp/db-explorer-sp.client';
+import { FilaConferenciaFilter } from './dto/filas-conferencia.dto';
 
 @Injectable()
 export class FilasConferenciaService {
   constructor(private readonly dbExplorerClient: SankhyaDBExplorerSPClient) {}
 
-  async getFilaConferencias() {
+  async getFilaConferencias(queryParams: FilaConferenciaFilter) {
     const sql = `
     SELECT 
     CAB.NUNOTA AS numeroUnico, 

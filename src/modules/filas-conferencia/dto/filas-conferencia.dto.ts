@@ -1,91 +1,55 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsDate, IsEnum, IsString } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsOptional, IsString } from 'class-validator';
 
-export enum Status {
-  TODOS = 'Todos',
-  AGUARDANDO_CONFERENCIA = 'Aguardando Conferência',
-  EM_ANDAMENTO = 'Em Andamento',
-  AGUARDANDO_RECONTAGEM = 'Aguardando Recontagem',
-  RECONTAGEM_EM_ANDAMENTO = 'Recontagem em Andamento',
-}
-
-export enum TipoMovimento {
-  COMPRA = 'Compra',
-  PEDIDO_VENDA = 'Pedido de Venda',
-}
-
-export enum TipoOperacao {
-  NOTA_FISCAL_PRODUTO_S_PD = 'Nota Fiscal - Produto (S/PD)',
-  NOTA_FISCAL_PRODUTO = 'Nota Fiscal - Produto',
-  CUBAGEM_PEDIDO = 'Cubagem de Pedido',
-}
-
-export enum TipoEntrega {
-  TRANSPORTADORA = 'Transportadora',
-}
-
-export class FilaConferenciaDTO {
-  @ApiProperty({ enum: Status, example: Status.AGUARDANDO_CONFERENCIA })
-  @IsEnum(Status)
-  status: Status;
-
-  @ApiProperty({ example: '1234' })
+// Filter
+export class FilaConferenciaFilter {
+  @ApiPropertyOptional()
   @IsString()
-  idEmpresa: string;
+  @IsOptional()
+  codigoStatus?: string;
 
-  @ApiProperty({ example: '1234' })
+  @ApiPropertyOptional()
   @IsString()
-  numeroModial: string;
+  @IsOptional()
+  numeroModial?: string;
 
-  @ApiProperty({ example: '1234' })
+  @ApiPropertyOptional()
   @IsString()
-  numeroNota: string;
+  @IsOptional()
+  numeroNota?: string;
 
-  @ApiProperty({ example: '1234' })
+  @ApiPropertyOptional()
   @IsString()
-  numeroUnico: string;
+  @IsOptional()
+  numeroUnico?: string;
 
-  @ApiProperty({ example: new Date() })
-  @IsDate()
-  dataMovimento: Date;
-
-  @ApiProperty({ enum: TipoMovimento, example: TipoMovimento.COMPRA })
-  @IsEnum(TipoMovimento)
-  tipoMovimento: TipoMovimento;
-
-  @ApiProperty({ enum: TipoOperacao, example: TipoOperacao.CUBAGEM_PEDIDO })
-  @IsEnum(TipoOperacao)
-  tipoOperacao: TipoOperacao;
-
-  @ApiProperty({ enum: TipoEntrega, example: TipoEntrega.TRANSPORTADORA })
-  @IsEnum(TipoEntrega)
-  tipoEntrega: TipoEntrega;
-
-  @ApiProperty({ example: 'John Doe' })
+  @ApiPropertyOptional()
   @IsString()
-  nomeParceiro: string;
+  @IsOptional()
+  dataInicio?: string;
 
-  @ApiProperty({ example: '1234' })
+  @ApiPropertyOptional()
   @IsString()
-  numeroParceiro: string;
+  @IsOptional()
+  dataFim?: string;
 
-  @ApiProperty({ example: '1234' })
+  @ApiPropertyOptional()
   @IsString()
-  numeroVendedor: string;
+  @IsOptional()
+  idParceiro?: string;
 
-  @ApiProperty({ example: '1234.56' })
+  @ApiPropertyOptional()
   @IsString()
-  valorNota: string;
+  @IsOptional()
+  codigoTipoMovimento?: string;
 
-  @ApiProperty({ example: 'Caixa - 10cm x 20cm x 5cm' })
+  @ApiPropertyOptional()
   @IsString()
-  volume: string;
+  @IsOptional()
+  codigoTipoOperacao?: string;
 
-  @ApiProperty({ example: '1234' })
+  @ApiPropertyOptional()
   @IsString()
-  idUsuarioInclusao: string;
-
-  @ApiProperty({ example: '1234' })
-  @IsString()
-  idUsuarioAlteracao: string;
+  @IsOptional()
+  codigoTipoEntrega?: string;
 }
