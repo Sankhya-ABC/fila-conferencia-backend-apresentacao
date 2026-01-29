@@ -7,13 +7,13 @@ import { AuthAppGuard } from './auth-app/auth-app.guard';
 import { AuthAppModule } from './auth-app/auth-app.module';
 import { envMapping, envSchema } from './config/env.schema';
 import { FilaConferenciaModule } from './modules/fila-conferencia/fila-conferencia.module';
-import { ParceirosModule } from './modules/parceiro/parceiro.module';
+import { ParceiroModule } from './modules/parceiro/parceiro.module';
 
 @Module({
   imports: [
     FilaConferenciaModule,
     AuthAppModule,
-    ParceirosModule,
+    ParceiroModule,
     ConfigModule.forRoot({
       isGlobal: true,
       load: [envMapping],

@@ -14,4 +14,4 @@ import { ParceiroService } from './parceiro.service';
     SankhyaDBExplorerSPClientModule,
   ],
 })
-export class ParceirosModule {}
+export class ParceiroModule {}
