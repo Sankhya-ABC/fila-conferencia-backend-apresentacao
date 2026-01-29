@@ -8,12 +8,14 @@ import { UsuariosModule } from './modules/usuarios/usuarios.module';
 import { ConfigModule } from '@nestjs/config';
 import { envMapping, envSchema } from './config/env.schema';
 import { FilasConferenciaModule } from './modules/filas-conferencia/filas-conferencia.module';
+import { ParceirosModule } from './modules/parceiro/parceiro.module';
 
 @Module({
   imports: [
     UsuariosModule,
     FilasConferenciaModule,
     AuthAppModule,
+    ParceirosModule,
     ConfigModule.forRoot({
       isGlobal: true,
       load: [envMapping],
