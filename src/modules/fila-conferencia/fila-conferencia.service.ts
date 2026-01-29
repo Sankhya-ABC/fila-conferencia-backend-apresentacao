@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { SankhyaDBExplorerSPClient } from 'src/http-client/db-explorer-sp/db-explorer-sp.client';
-import { FilaConferenciaFilter } from './dto/filas-conferencia.dto';
+import { FilaConferenciaFilter } from './dto/fila-conferencia.dto';
 
 @Injectable()
-export class FilasConferenciaService {
+export class FilaConferenciaService {
   constructor(private readonly dbExplorerClient: SankhyaDBExplorerSPClient) {}
 
   async getFilaConferencias(queryParams: FilaConferenciaFilter) {
