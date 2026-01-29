@@ -8,12 +8,14 @@ import { AuthAppModule } from './auth-app/auth-app.module';
 import { envMapping, envSchema } from './config/env.schema';
 import { FilaConferenciaModule } from './modules/fila-conferencia/fila-conferencia.module';
 import { ParceiroModule } from './modules/parceiro/parceiro.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
     FilaConferenciaModule,
     AuthAppModule,
     ParceiroModule,
+    AuthModule,
     ConfigModule.forRoot({
       isGlobal: true,
       load: [envMapping],
