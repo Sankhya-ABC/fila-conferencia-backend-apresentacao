@@ -43,7 +43,7 @@ export class SankhyaDBExplorerSPClient {
       return this.buildDbExplorerResponse(response.data);
     } catch (error: any) {
       throw new HttpException(
-        error?.response?.data || 'Erro ao executar DbExplorerSP',
+        error?.response?.data || 'Erro ao executar DbExplorerSP.executeQuery',
         error?.response?.status || 500,
       );
     }

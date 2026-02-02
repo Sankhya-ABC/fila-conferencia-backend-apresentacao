@@ -79,7 +79,8 @@ export class SankhyaLoadRecordsClient {
         start += pageSize;
       } catch (error: any) {
         throw new HttpException(
-          error?.response?.data || 'Erro ao consultar loadRecords',
+          error?.response?.data ||
+            'Erro ao consultar CRUDServiceProvider.loadRecords',
           error?.response?.status || 500,
         );
       }
