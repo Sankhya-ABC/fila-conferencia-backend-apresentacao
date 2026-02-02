@@ -1,37 +1,32 @@
 import { HttpException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { GatewayClient } from '../gateway/gateway.client';
+import { LoginRequest } from 'src/modules/auth/dto/auth.dto';
 
 @Injectable()
-export class SankhyaLoginClient {
+export class SankhyaMobileLoginSPClient {
   private readonly endpoint: string;
 
   constructor(
     private readonly gateway: GatewayClient,
     config: ConfigService,
   ) {
-    this.endpoint = `/${config.getOrThrow('SNK_EXECUTE_QUERY')}`;
+    this.endpoint = `/${config.getOrThrow('SNK_LOGIN')}`;
   }
 
-  async login(login: { usuario: string; senha: string }): Promise<any> {
+  async login(login: LoginRequest): Promise<any> {
     const body = {
       serviceName: 'MobileLoginSP.login',
       requestBody: {
-        NOMUSU: {
-          $: login.usuario,
-        },
-        INTERNO: {
-          $: login.senha,
-        },
-        KEEPCONNECTED: {
-          $: 'S',
-        },
+        NOMUSU: { $: login.usuario },
+        INTERNO: { $: login.senha },
+        KEEPCONNECTED: { $: 'S' },
       },
     };
 
     try {
       const response = await this.gateway.client.post(this.endpoint, body);
-      return response;
+      return response.data;
     } catch (error: any) {
       throw new HttpException(
         error?.response?.data || 'Erro ao executar MobileLoginSP.login',

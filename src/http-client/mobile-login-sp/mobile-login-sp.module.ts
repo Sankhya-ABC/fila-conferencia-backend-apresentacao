@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AuthAppModule } from 'src/auth-app/auth-app.module';
-import { SankhyaLoginClient } from './login.client';
 import { GatewayClientModule } from '../gateway/gateway.module';
+import { SankhyaMobileLoginSPClient } from './mobile-login-sp.client';
 
 @Module({
-  providers: [SankhyaLoginClient],
-  exports: [SankhyaLoginClient],
+  providers: [SankhyaMobileLoginSPClient],
+  exports: [SankhyaMobileLoginSPClient],
   imports: [ConfigModule, AuthAppModule, GatewayClientModule],
 })
-export class SankhyaLoginClientModule {}
+export class SankhyaMobileLoginSPClientModule {}

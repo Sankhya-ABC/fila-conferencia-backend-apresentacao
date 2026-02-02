@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AuthAppModule } from 'src/auth-app/auth-app.module';
-import { SankhyaDBExplorerSPClientModule } from 'src/http-client/db-explorer-sp/db-explorer-sp.module';
 import { GatewayClientModule } from 'src/http-client/gateway/gateway.module';
+import { SankhyaMobileLoginSPClientModule } from 'src/http-client/mobile-login-sp/mobile-login-sp.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 
@@ -11,7 +11,7 @@ import { AuthService } from './auth.service';
   imports: [
     GatewayClientModule,
     AuthAppModule,
-    SankhyaDBExplorerSPClientModule,
+    SankhyaMobileLoginSPClientModule,
   ],
 })
 export class AuthModule {}
