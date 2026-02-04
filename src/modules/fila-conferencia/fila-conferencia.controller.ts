@@ -1,8 +1,10 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { AuthGuard } from 'src/auth-user/auth-user.guard';
 import { FilaConferenciaFilter } from './dto/fila-conferencia.dto';
 import { FilaConferenciaService } from './fila-conferencia.service';
 
+@UseGuards(AuthGuard)
 @ApiTags('Fila de Conferências')
 @Controller('fila-conferencias')
 export class FilaConferenciaController {

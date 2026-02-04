@@ -4,6 +4,7 @@ import { SankhyaDBExplorerSPClientModule } from 'src/http-client/db-explorer-sp/
 import { GatewayClientModule } from 'src/http-client/gateway/gateway.module';
 import { FilaConferenciaController } from './fila-conferencia.controller';
 import { FilaConferenciaService } from './fila-conferencia.service';
+import { AuthUserModule } from 'src/auth-user/auth-user.module';
 
 @Module({
   controllers: [FilaConferenciaController],
@@ -11,6 +12,7 @@ import { FilaConferenciaService } from './fila-conferencia.service';
   imports: [
     GatewayClientModule,
     AuthAppModule,
+    AuthUserModule,
     SankhyaDBExplorerSPClientModule,
   ],
 })

@@ -4,6 +4,7 @@ import { SankhyaDBExplorerSPClientModule } from 'src/http-client/db-explorer-sp/
 import { GatewayClientModule } from 'src/http-client/gateway/gateway.module';
 import { ParceiroController } from './parceiro.controller';
 import { ParceiroService } from './parceiro.service';
+import { AuthUserModule } from 'src/auth-user/auth-user.module';
 
 @Module({
   controllers: [ParceiroController],
@@ -11,6 +12,7 @@ import { ParceiroService } from './parceiro.service';
   imports: [
     GatewayClientModule,
     AuthAppModule,
+    AuthUserModule,
     SankhyaDBExplorerSPClientModule,
   ],
 })
