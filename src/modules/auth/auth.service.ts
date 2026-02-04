@@ -18,7 +18,10 @@ export class AuthService {
         callID: response.responseBody.callID.$,
         jsessionid: response.responseBody.jsessionid.$,
         kID: response.responseBody.kID.$,
-        idUsuario: response.responseBody.idusu.$,
+        idUsuario: Buffer.from(
+          response.responseBody.idusu.$.trim(),
+          'base64',
+        ).toString('utf-8'),
       };
     }
   }
