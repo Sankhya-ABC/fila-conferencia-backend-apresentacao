@@ -7,7 +7,7 @@ type SessionData = {
 
 @Injectable()
 export class AuthUserService {
-  private readonly HOURS = 0.125;
+  private readonly HOURS = 20;
   private readonly TTL = 60 * 60 * this.HOURS;
   private sessions = new Map<string, SessionData>();
 

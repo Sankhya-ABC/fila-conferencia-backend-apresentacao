@@ -9,12 +9,14 @@ import { envMapping, envSchema } from './config/env.schema';
 import { FilaConferenciaModule } from './modules/fila-conferencia/fila-conferencia.module';
 import { ParceiroModule } from './modules/parceiro/parceiro.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { SeparacaoModule } from './modules/separacao/separacao.module';
 
 @Module({
   imports: [
     FilaConferenciaModule,
     AuthAppModule,
     ParceiroModule,
+    SeparacaoModule,
     AuthModule,
     ConfigModule.forRoot({
       isGlobal: true,

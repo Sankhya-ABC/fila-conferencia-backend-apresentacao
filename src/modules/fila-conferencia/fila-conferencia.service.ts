@@ -12,6 +12,7 @@ export class FilaConferenciaService {
     CAB.NUNOTA AS numeroUnico, 
     CAB.NUMNOTA AS numeroNota, 
     CAB.AD_NUMTALAO AS numeroModial, 
+    CAB.NUCONFATUAL AS numeroConferencia, 
 
     CAB.VLRNOTA AS valorNota, 
     CAB.VOLUME AS volume, 
