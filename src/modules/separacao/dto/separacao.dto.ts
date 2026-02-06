@@ -2,11 +2,11 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsString } from 'class-validator';
 
 // Filter
-export class NumeroNotaFilter {
+export class NumeroUnicoFilter {
   @ApiProperty({ example: '1234' })
   @IsString()
   @IsNotEmpty()
-  numeroNota: string;
+  numeroUnico: string;
 }
 
 export class IdAndControleProdutoFilter {

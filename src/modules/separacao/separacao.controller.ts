@@ -4,7 +4,7 @@ import { AuthUserGuard } from 'src/auth-user/auth-user.guard';
 import { SeparacaoService } from './separacao.service';
 import {
   IdAndControleProdutoFilter,
-  NumeroNotaFilter,
+  NumeroUnicoFilter,
 } from './dto/separacao.dto';
 
 @UseGuards(AuthUserGuard)
@@ -15,13 +15,13 @@ export class SeparacaoController {
 
   @Get('dados-basicos')
   @ApiOperation({ summary: 'Dados básicos do pedido' })
-  getDadosBasicos(@Query() queryParam: NumeroNotaFilter) {
+  getDadosBasicos(@Query() queryParam: NumeroUnicoFilter) {
     return this.service.getDadosBasicos(queryParam);
   }
 
   @Get('itens-pedidos')
   @ApiOperation({ summary: 'Listar Itens Pedidos' })
-  getItensPedido(@Query() queryParam: NumeroNotaFilter) {
+  getItensPedido(@Query() queryParam: NumeroUnicoFilter) {
     return this.service.getItensPedido(queryParam);
   }
 

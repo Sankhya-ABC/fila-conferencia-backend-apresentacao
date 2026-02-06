@@ -2,17 +2,18 @@ import { Injectable } from '@nestjs/common';
 import { SankhyaDBExplorerSPClient } from 'src/http-client/db-explorer-sp/db-explorer-sp.client';
 import {
   IdAndControleProdutoFilter,
-  NumeroNotaFilter,
+  NumeroUnicoFilter,
 } from './dto/separacao.dto';
 
 @Injectable()
 export class SeparacaoService {
   constructor(private readonly dbExplorerClient: SankhyaDBExplorerSPClient) {}
 
-  async getDadosBasicos({ numeroNota }: NumeroNotaFilter) {
+  async getDadosBasicos({ numeroUnico }: NumeroUnicoFilter) {
     const sql = `
     SELECT 
     CAB.NUCONFATUAL AS numeroConferencia, 
+    CAB.NUMNOTA AS numeroNota, 
 
     PAR.CODPARC AS idParceiro, 
     PAR.RAZAOSOCIAL AS nomeParceiro, 
@@ -28,13 +29,13 @@ export class SeparacaoService {
     LEFT JOIN TGFVEN VEN 
     ON VEN.CODVEND = CAB.CODVEND 
 
-    WHERE CAB.NUMNOTA = ${numeroNota} 
+    WHERE CAB.NUNOTA = ${numeroUnico} 
     `;
     const response = await this.dbExplorerClient.executeQuery(sql);
-    return response;
+    return response?.[0];
   }
 
-  async getItensPedido({ numeroNota }: NumeroNotaFilter) {
+  async getItensPedido({ numeroUnico }: NumeroUnicoFilter) {
     const sql = `
     SELECT 
     PRO.IMAGEM AS imagem, 
@@ -59,18 +60,21 @@ export class SeparacaoService {
     INNER JOIN TGFPRO PRO ON PRO.CODPROD = ITE.CODPROD 
     LEFT JOIN TGFPAR PAR ON PAR.CODPARC = PRO.CODPARCFORN 
 
-    WHERE NUNOTA = ${numeroNota} 
+    WHERE NUNOTA = ${numeroUnico} 
     `;
     let response = await this.dbExplorerClient.executeQuery(sql);
 
     response = await Promise.all(
       response?.map(async (data) => {
         const { idProduto, controle } = data;
-        const codigosBarra = await this.getCodigosDeBarra({
+        let codigoBarras = await this.getCodigosDeBarra({
           idProduto,
           controle,
         });
-        return { ...data, codigosBarra };
+        codigoBarras = codigoBarras?.map((codigoBarra) =>
+          codigoBarra.CODIGO?.trim(),
+        );
+        return { ...data, codigoBarras };
       }),
     );
 
@@ -80,6 +84,7 @@ export class SeparacaoService {
   async getCodigosDeBarra({ idProduto, controle }: IdAndControleProdutoFilter) {
     const sql = `
     SELECT 
+    DISTINCT 
     VW_CP.CODIGO 
 
     FROM VW_CODIGOS_PRODUTO VW_CP 
