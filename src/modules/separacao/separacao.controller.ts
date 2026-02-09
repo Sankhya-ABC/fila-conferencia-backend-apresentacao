@@ -1,10 +1,11 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { AuthUserGuard } from 'src/auth-user/auth-user.guard';
 import { SeparacaoService } from './separacao.service';
 import {
   IdAndControleProdutoFilter,
   NumeroUnicoFilter,
+  IniciarConferenciaParams,
 } from './dto/separacao.dto';
 
 @UseGuards(AuthUserGuard)
@@ -29,5 +30,11 @@ export class SeparacaoController {
   @ApiOperation({ summary: 'Listar Códigos de Barra de um Produto' })
   getCodigosDeBarra(@Query() queryParam: IdAndControleProdutoFilter) {
     return this.service.getCodigosDeBarra(queryParam);
+  }
+
+  @Post('iniciar-conferencia')
+  @ApiOperation({ summary: 'Iniciar Conferência de um Pedido' })
+  postIniciarConferencia(@Query() queryParam: IniciarConferenciaParams) {
+    return this.service.postIniciarConferencia(queryParam);
   }
 }

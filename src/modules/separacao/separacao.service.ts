@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { SankhyaDBExplorerSPClient } from 'src/http-client/db-explorer-sp/db-explorer-sp.client';
 import {
   IdAndControleProdutoFilter,
@@ -15,25 +15,44 @@ export class SeparacaoService {
     numeroNota,
     numeroUnico,
   }: IniciarConferenciaParams) {
-    const status = await this.dbExplorerClient.executeQuery(`
-    SELECT 
-    sankhya.SNK_GET_SATUSCONFERENCIA(CAB.NUNOTA) AS codigoStatus, 
-
-    WHERE CAB.NUNOTA = ${numeroUnico} 
+    const statusResponse = await this.dbExplorerClient.executeQuery(`
+      SELECT 
+      sankhya.SNK_GET_SATUSCONFERENCIA(CAB.NUNOTA) AS codigoStatus 
+      FROM TGFCAB CAB 
+      WHERE CAB.NUNOTA = ${numeroUnico} 
     `);
 
-    if (status === 'AC') {
-      const numeroConferencia = await this.dbExplorerClient.executeQuery(`
-    SELECT ultcod FROM TGFNUM WHERE arquivo = 'tgfcon2'
+    const status = statusResponse?.[0]?.codigoStatus;
+
+    if (status !== 'AC') {
+      throw new BadRequestException(
+        'Para iniciar a conferência, o pedido deve estar com status "Aguardando Conferência"',
+      );
+    }
+
+    const numeroConferenciaResponse = await this.dbExplorerClient.executeQuery(`
+    SELECT ULTCOD + 1 AS numeroConferencia 
+    FROM TGFNUM 
+    WHERE ARQUIVO = 'TGFCON2' AND CODEMP = 1 AND SERIE = '.' 
     `);
 
-      await this.dbExplorerClient.executeQuery(`
-    UPDATE TGFCAB
-    SET NUCONFATUAL = ${numeroConferencia}
-    WHERE NUNOTA = ${numeroNota};
+    const numeroConferencia = numeroConferenciaResponse[0].numeroConferencia;
+
+    await this.dbExplorerClient.executeQuery(`
+      UPDATE TGFNUM
+      SET ULTCOD = ${numeroConferencia}
+      WHERE ARQUIVO = 'TGFCON2'
+        AND CODEMP = 1
+        AND SERIE = '.'
     `);
 
-      const sql = `
+    await this.dbExplorerClient.executeQuery(`
+      UPDATE TGFCAB CAB
+      SET NUCONFATUAL = ${numeroConferencia}
+      WHERE CAB.NUNOTA = ${numeroUnico}
+    `);
+
+    await this.dbExplorerClient.executeQuery(`
     INSERT INTO TGFCON2 ( 
     CODUSUCONF, 
     DHFINCONF, 
@@ -57,13 +76,9 @@ export class SeparacaoService {
     0, 
     'A' 
     ); 
-    `;
-      const response = await this.dbExplorerClient.executeQuery(sql);
-      return response;
-    }
-    throw new Error(
-      'para iniciar a conferência, o pedido deve estar com status "Aguardando Conferência"',
-    );
+    `);
+
+    return { numeroConferencia };
   }
 
   async getDadosBasicos({ numeroUnico }: NumeroUnicoFilter) {

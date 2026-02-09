@@ -14,11 +14,26 @@ export class IdAndControleProdutoFilter {
   @IsString()
   @IsNotEmpty()
   idProduto: string;
+
+  @ApiProperty({ example: 'Azul' })
+  @IsString()
+  @IsNotEmpty()
   controle: string;
 }
 
-export interface IniciarConferenciaParams {
+export class IniciarConferenciaParams {
+  @ApiProperty({ example: '1234' })
+  @IsString()
+  @IsNotEmpty()
   idUsuario: string;
+
+  @ApiProperty({ example: '1234' })
+  @IsString()
+  @IsNotEmpty()
   numeroNota: string;
+
+  @ApiProperty({ example: '1234' })
+  @IsString()
+  @IsNotEmpty()
   numeroUnico: string;
 }
