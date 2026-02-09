@@ -16,3 +16,9 @@ export class IdAndControleProdutoFilter {
   idProduto: string;
   controle: string;
 }
+
+export interface IniciarConferenciaParams {
+  idUsuario: string;
+  numeroNota: string;
+  numeroUnico: string;
+}

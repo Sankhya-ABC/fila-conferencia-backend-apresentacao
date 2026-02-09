@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { SankhyaDBExplorerSPClient } from 'src/http-client/db-explorer-sp/db-explorer-sp.client';
 import {
   IdAndControleProdutoFilter,
+  IniciarConferenciaParams,
   NumeroUnicoFilter,
 } from './dto/separacao.dto';
 
@@ -9,11 +10,71 @@ import {
 export class SeparacaoService {
   constructor(private readonly dbExplorerClient: SankhyaDBExplorerSPClient) {}
 
+  async postIniciarConferencia({
+    idUsuario,
+    numeroNota,
+    numeroUnico,
+  }: IniciarConferenciaParams) {
+    const status = await this.dbExplorerClient.executeQuery(`
+    SELECT 
+    sankhya.SNK_GET_SATUSCONFERENCIA(CAB.NUNOTA) AS codigoStatus, 
+
+    WHERE CAB.NUNOTA = ${numeroUnico} 
+    `);
+
+    if (status === 'AC') {
+      const numeroConferencia = await this.dbExplorerClient.executeQuery(`
+    SELECT ultcod FROM TGFNUM WHERE arquivo = 'tgfcon2'
+    `);
+
+      await this.dbExplorerClient.executeQuery(`
+    UPDATE TGFCAB
+    SET NUCONFATUAL = ${numeroConferencia}
+    WHERE NUNOTA = ${numeroNota};
+    `);
+
+      const sql = `
+    INSERT INTO TGFCON2 ( 
+    CODUSUCONF, 
+    DHFINCONF, 
+    DHINICONF, 
+    NUCONF, 
+    NUCONFORIG, 
+    NUNOTADEV, 
+    NUNOTAORIG, 
+    NUPEDCOMP, 
+    QTDVOL, 
+    STATUS 
+    ) VALUES ( 
+    ${idUsuario}, 
+    NULL, 
+    '${new Date().toISOString().slice(0, 19).replace('T', ' ')}', 
+    ${numeroConferencia}, 
+    NULL, 
+    NULL, 
+    ${numeroNota}, 
+    NULL, 
+    0, 
+    'A' 
+    ); 
+    `;
+      const response = await this.dbExplorerClient.executeQuery(sql);
+      return response;
+    }
+    throw new Error(
+      'para iniciar a conferência, o pedido deve estar com status "Aguardando Conferência"',
+    );
+  }
+
   async getDadosBasicos({ numeroUnico }: NumeroUnicoFilter) {
     const sql = `
     SELECT 
-    CAB.NUCONFATUAL AS numeroConferencia, 
+    CAB.NUNOTA AS numeroUnico, 
     CAB.NUMNOTA AS numeroNota, 
+    CAB.AD_NUMTALAO AS numeroModial, 
+    CAB.NUCONFATUAL AS numeroConferencia, 
+
+    sankhya.SNK_GET_SATUSCONFERENCIA(CAB.NUNOTA) AS codigoStatus, 
 
     PAR.CODPARC AS idParceiro, 
     PAR.RAZAOSOCIAL AS nomeParceiro, 
