@@ -52,31 +52,27 @@ export class SeparacaoService {
       WHERE CAB.NUNOTA = ${numeroUnico}
     `);
 
-    await this.dbExplorerClient.executeQuery(`
-    INSERT INTO TGFCON2 ( 
-    CODUSUCONF, 
-    DHFINCONF, 
-    DHINICONF, 
-    NUCONF, 
-    NUCONFORIG, 
-    NUNOTADEV, 
-    NUNOTAORIG, 
-    NUPEDCOMP, 
-    QTDVOL, 
-    STATUS 
-    ) VALUES ( 
-    ${idUsuario}, 
-    NULL, 
-    '${new Date().toISOString().slice(0, 19).replace('T', ' ')}', 
-    ${numeroConferencia}, 
-    NULL, 
-    NULL, 
-    ${numeroNota}, 
-    NULL, 
-    0, 
-    'A' 
-    ); 
-    `);
+    const aaa = {
+      serviceName: 'DatasetSP.save',
+      requestBody: {
+        entityName: 'CabecalhoConferencia',
+        standAlone: false,
+        fields: ['CODUSUCONF', 'NUCONF', 'QTDVOL', 'STATUS'],
+        records: [
+          {
+            pk: {
+              NUNOTAORIG: numeroUnico,
+            },
+            values: {
+              '0': idUsuario,
+              '1': numeroConferencia,
+              '2': 0,
+              '3': 'A',
+            },
+          },
+        ],
+      },
+    };
 
     return { numeroConferencia };
   }
@@ -153,6 +149,28 @@ export class SeparacaoService {
         return { ...data, codigoBarras };
       }),
     );
+
+    const teste = {
+      serviceName: 'DatasetSP.save',
+      requestBody: {
+        entityName: 'CabecalhoConferencia',
+        standAlone: false,
+        fields: ['CODUSUCONF', 'NUCONF', 'QTDVOL', 'STATUS'],
+        records: [
+          {
+            pk: {
+              NUNOTAORIG: 61854,
+            },
+            values: {
+              '0': 0,
+              '1': 6701,
+              '2': 0,
+              '3': 'A',
+            },
+          },
+        ],
+      },
+    };
 
     return response;
   }
