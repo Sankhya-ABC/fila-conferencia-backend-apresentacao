@@ -15,6 +15,7 @@ export class SeparacaoService {
     numeroNota,
     numeroUnico,
   }: IniciarConferenciaParams) {
+    // consulta o status
     const statusResponse = await this.dbExplorerClient.executeQuery(`
       SELECT 
       sankhya.SNK_GET_SATUSCONFERENCIA(CAB.NUNOTA) AS codigoStatus 
@@ -24,12 +25,14 @@ export class SeparacaoService {
 
     const status = statusResponse?.[0]?.codigoStatus;
 
+    // se status for diferente de AC, lançar erro
     if (status !== 'AC') {
       throw new BadRequestException(
         'Para iniciar a conferência, o pedido deve estar com status "Aguardando Conferência"',
       );
     }
 
+    // obter último número de conferência
     const numeroConferenciaResponse = await this.dbExplorerClient.executeQuery(`
     SELECT ULTCOD + 1 AS numeroConferencia 
     FROM TGFNUM 
@@ -38,6 +41,7 @@ export class SeparacaoService {
 
     const numeroConferencia = numeroConferenciaResponse[0].numeroConferencia;
 
+    // atualizar numero de conferência
     await this.dbExplorerClient.executeQuery(`
       UPDATE TGFNUM
       SET ULTCOD = ${numeroConferencia}
@@ -46,12 +50,14 @@ export class SeparacaoService {
         AND SERIE = '.'
     `);
 
+    // atualizar tgfcab com o novo numero de conferência
     await this.dbExplorerClient.executeQuery(`
       UPDATE TGFCAB CAB
       SET NUCONFATUAL = ${numeroConferencia}
       WHERE CAB.NUNOTA = ${numeroUnico}
     `);
 
+    // inserir nova conferência na tabela de conferências
     await this.dbExplorerClient.executeQuery(`
     INSERT INTO TGFCON2 ( 
     CODUSUCONF, 
