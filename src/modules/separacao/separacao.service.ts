@@ -69,7 +69,6 @@ export class SeparacaoService {
         CODUSUCONF: idUsuario,
         DHFINCONF: null,
         DHINICONF: new Date().toISOString().slice(0, 19).replace('T', ' '),
-        NUCONF: numeroConferencia,
         NUCONFORIG: null,
         NUNOTADEV: null,
         NUNOTAORIG: numeroNota,
