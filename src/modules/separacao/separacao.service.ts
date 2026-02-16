@@ -142,7 +142,12 @@ export class SeparacaoService {
 
     response = await Promise.all(
       response?.map(async (data) => {
-        const { idProduto, controle } = data;
+        const { idProduto, controle, imagem } = data;
+        let imagemBase64: string | null = null;
+        if (imagem) {
+          imagemBase64 = Buffer.from(imagem, 'hex').toString('base64');
+        }
+
         let codigoBarras = await this.getCodigosDeBarra({
           idProduto,
           controle,
@@ -150,7 +155,7 @@ export class SeparacaoService {
         codigoBarras = codigoBarras?.map((codigoBarra) =>
           codigoBarra.CODIGO?.trim(),
         );
-        return { ...data, codigoBarras };
+        return { ...data, codigoBarras, imagem: imagemBase64 };
       }),
     );
 
