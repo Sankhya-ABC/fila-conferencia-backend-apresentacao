@@ -17,10 +17,11 @@ export class AuthService {
       throw new UnauthorizedException('Usuário ou senha inválidos');
     }
 
-    const idUsuario = Buffer.from(
-      response.responseBody.idusu.$.trim(),
-      'base64',
-    ).toString('utf-8');
+    const idUsuario = Number(
+      Buffer.from(response.responseBody.idusu.$.trim(), 'base64').toString(
+        'utf-8',
+      ),
+    );
     const token = randomUUID();
     const nome = body.usuario;
 

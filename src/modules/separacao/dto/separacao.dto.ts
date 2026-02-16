@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 // Filter
 export class NumeroUnicoFilter {
@@ -21,19 +22,22 @@ export class IdAndControleProdutoFilter {
   controle: string;
 }
 
-export class IniciarConferenciaParams {
-  @ApiProperty({ example: '1234' })
-  @IsString()
+export class IniciarConferenciaBody {
+  @ApiProperty({ example: 1234 })
+  @Type(() => Number)
+  @IsNumber()
   @IsNotEmpty()
-  idUsuario: string;
+  idUsuario: number;
 
-  @ApiProperty({ example: '1234' })
-  @IsString()
+  @ApiProperty({ example: 1234 })
+  @Type(() => Number)
+  @IsNumber()
   @IsNotEmpty()
-  numeroNota: string;
+  numeroNota: number;
 
-  @ApiProperty({ example: '1234' })
-  @IsString()
+  @ApiProperty({ example: 1234 })
+  @Type(() => Number)
+  @IsNumber()
   @IsNotEmpty()
-  numeroUnico: string;
+  numeroUnico: number;
 }

@@ -9,9 +9,9 @@ type SessionData = {
 export class AuthUserService {
   private readonly HOURS = 20;
   private readonly TTL = 60 * 60 * this.HOURS;
-  private sessions = new Map<string, SessionData>();
+  private sessions = new Map<number, SessionData>();
 
-  async set(idUsuario: string, data: SessionData) {
+  async set(idUsuario: number, data: SessionData) {
     this.sessions.set(idUsuario, data);
 
     setTimeout(() => {
@@ -19,7 +19,7 @@ export class AuthUserService {
     }, this.TTL * 1000);
   }
 
-  async getByUser(idUsuario: string) {
+  async getByUser(idUsuario: number) {
     return this.sessions.get(idUsuario);
   }
 
@@ -30,7 +30,7 @@ export class AuthUserService {
     return null;
   }
 
-  async delete(idUsuario: string) {
+  async delete(idUsuario: number) {
     this.sessions.delete(idUsuario);
   }
 }
