@@ -5,10 +5,14 @@ import {
   IniciarConferenciaParams,
   NumeroUnicoFilter,
 } from './dto/separacao.dto';
+import { SankhyaDatasetSPClient } from 'src/http-client/dataset-sp/dataset-sp.client';
 
 @Injectable()
 export class SeparacaoService {
-  constructor(private readonly dbExplorerClient: SankhyaDBExplorerSPClient) {}
+  constructor(
+    private readonly dbExplorerClient: SankhyaDBExplorerSPClient,
+    private readonly datasetSP: SankhyaDatasetSPClient,
+  ) {}
 
   async postIniciarConferencia({
     idUsuario,
@@ -34,55 +38,46 @@ export class SeparacaoService {
 
     // obter último número de conferência
     const numeroConferenciaResponse = await this.dbExplorerClient.executeQuery(`
-    SELECT ULTCOD + 1 AS numeroConferencia 
+    SELECT ULTCOD AS numeroConferencia, 
+    CODMODDOC 
     FROM TGFNUM 
     WHERE ARQUIVO = 'TGFCON2' AND CODEMP = 1 AND SERIE = '.' 
     `);
 
-    const numeroConferencia = numeroConferenciaResponse[0].numeroConferencia;
+    const numeroConferencia =
+      numeroConferenciaResponse[0].numeroConferencia + 1;
+    const codmoddoc = numeroConferenciaResponse[0].codmoddoc + 1;
 
-    // atualizar numero de conferência
-    await this.dbExplorerClient.executeQuery(`
-      UPDATE TGFNUM
-      SET ULTCOD = ${numeroConferencia}
-      WHERE ARQUIVO = 'TGFCON2'
-        AND CODEMP = 1
-        AND SERIE = '.'
-    `);
+    // atualizar número de conferência
+    await this.datasetSP.save({
+      entityName: 'ControleNumeracao',
+      fieldsAndValues: { ULTCOD: numeroConferencia, CODMODDOC: codmoddoc },
+      pk: { ARQUIVO: 'TGFCON2', CODEMP: 1, SERIE: '.' },
+    });
 
-    // atualizar tgfcab com o novo numero de conferência
-    await this.dbExplorerClient.executeQuery(`
-      UPDATE TGFCAB CAB
-      SET NUCONFATUAL = ${numeroConferencia}
-      WHERE CAB.NUNOTA = ${numeroUnico}
-    `);
+    // atualizar tgfcab com o novo número de conferência
+    await this.datasetSP.save({
+      entityName: 'CabecalhoNota',
+      fieldsAndValues: { NUCONFATUAL: numeroConferencia },
+      pk: { NUNOTA: numeroUnico },
+    });
 
     // inserir nova conferência na tabela de conferências
-    await this.dbExplorerClient.executeQuery(`
-    INSERT INTO TGFCON2 ( 
-    CODUSUCONF, 
-    DHFINCONF, 
-    DHINICONF, 
-    NUCONF, 
-    NUCONFORIG, 
-    NUNOTADEV, 
-    NUNOTAORIG, 
-    NUPEDCOMP, 
-    QTDVOL, 
-    STATUS 
-    ) VALUES ( 
-    ${idUsuario}, 
-    NULL, 
-    '${new Date().toISOString().slice(0, 19).replace('T', ' ')}', 
-    ${numeroConferencia}, 
-    NULL, 
-    NULL, 
-    ${numeroNota}, 
-    NULL, 
-    0, 
-    'A' 
-    ); 
-    `);
+    await this.datasetSP.save({
+      entityName: 'CabecalhoConferencia',
+      fieldsAndValues: {
+        CODUSUCONF: idUsuario,
+        DHFINCONF: null,
+        DHINICONF: new Date().toISOString().slice(0, 19).replace('T', ' '),
+        NUCONF: numeroConferencia,
+        NUCONFORIG: null,
+        NUNOTADEV: null,
+        NUNOTAORIG: numeroNota,
+        NUPEDCOMP: null,
+        QTDVOL: 0,
+        STATUS: 'A',
+      },
+    });
 
     return { numeroConferencia };
   }
