@@ -136,6 +136,7 @@ export class SeparacaoService {
     CAB.NUCONFATUAL AS numeroConferencia, 
 
     sankhya.SNK_GET_SATUSCONFERENCIA(CAB.NUNOTA) AS codigoStatus, 
+    CAB.TIPMOV AS codigoTipoMovimento, 
 
     PAR.CODPARC AS idParceiro, 
     PAR.RAZAOSOCIAL AS nomeParceiro, 
