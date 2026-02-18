@@ -2,6 +2,25 @@ import { HttpException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { GatewayClient } from '../gateway/gateway.client';
 
+interface LoadRecordsParams {
+  rootEntity: string;
+  fieldset?: string;
+  criteria?: {
+    expression: string;
+    parameters?: {
+      value: string | number | boolean | Date;
+      type: 'S' | 'I' | 'D' | 'B';
+    }[];
+  };
+  joins?: {
+    path: string;
+    fieldset: string;
+  }[];
+  modifiedSince?: string;
+  offsetPage?: number;
+  limit?: number;
+}
+
 @Injectable()
 export class SankhyaLoadRecordsClient {
   private readonly endpoint: string;
@@ -10,37 +29,78 @@ export class SankhyaLoadRecordsClient {
     private readonly gateway: GatewayClient,
     config: ConfigService,
   ) {
-    this.endpoint = `/${config.getOrThrow('SNK_EXECUTE_QUERY')}`;
+    this.endpoint = `/${config.getOrThrow('SNK_LOAD_RECORDS')}`;
   }
 
-  buildDbExplorerResponse(response: any): Array<Record<string, any>> {
-    const fieldsMetadata = response?.responseBody?.fieldsMetadata;
-    const rows = response?.responseBody?.rows;
-
-    if (!Array.isArray(fieldsMetadata) || !Array.isArray(rows)) {
-      return [];
+  async loadRecords({
+    rootEntity,
+    fieldset,
+    criteria,
+    joins = [],
+    modifiedSince,
+    offsetPage = 0,
+    limit,
+  }: LoadRecordsParams) {
+    if (!rootEntity) {
+      throw new HttpException('rootEntity é obrigatório', 400);
     }
 
-    return rows.map((row) => {
-      return fieldsMetadata.reduce(
-        (acc, field, index) => {
-          acc[field.name] = row[index] ?? null;
-          return acc;
-        },
-        {} as Record<string, any>,
-      );
-    });
-  }
-
-  async executeQuery(sql: string): Promise<any> {
-    const body = {
+    const body: any = {
       serviceName: 'CRUDServiceProvider.loadRecords',
-      requestBody: { sql },
+      requestBody: {
+        dataSet: {
+          rootEntity,
+          ignoreCalculatedFields: 'true',
+          useFileBasedPagination: 'true',
+          includePresentationFields: 'N',
+          tryJoinedFields: 'true',
+          offsetPage: String(offsetPage),
+        },
+      },
     };
+
+    if (modifiedSince) {
+      body.requestBody.dataSet.modifiedSince = modifiedSince;
+    }
+
+    if (criteria?.expression) {
+      body.requestBody.dataSet.criteria = {
+        expression: { $: criteria.expression },
+        parameter:
+          criteria.parameters?.map((param) => ({
+            $: String(param.value),
+            type: param.type,
+          })) ?? [],
+      };
+    }
+
+    const entityList: any[] = [];
+
+    if (fieldset) {
+      entityList.push({
+        path: '',
+        fieldset: { list: fieldset },
+      });
+    }
+
+    joins.forEach((join) => {
+      entityList.push({
+        path: join.path,
+        fieldset: { list: join.fieldset },
+      });
+    });
+
+    if (entityList.length) {
+      body.requestBody.dataSet.entity = entityList;
+    }
+
+    if (limit) {
+      body.requestBody.dataSet.limit = String(limit);
+    }
 
     try {
       const response = await this.gateway.client.post(this.endpoint, body);
-      return this.buildDbExplorerResponse(response.data);
+      return response.data;
     } catch (error: any) {
       throw new HttpException(
         error?.response?.data ||
