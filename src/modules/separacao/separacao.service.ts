@@ -1,11 +1,12 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { SankhyaDatasetSPClient } from 'src/http-client/dataset-sp/dataset-sp.client';
 import { SankhyaDBExplorerSPClient } from 'src/http-client/db-explorer-sp/db-explorer-sp.client';
 import {
   IdAndControleProdutoFilter,
   IniciarConferenciaBody,
+  NumeroConferenciaFilter,
   NumeroUnicoFilter,
 } from './dto/separacao.dto';
-import { SankhyaDatasetSPClient } from 'src/http-client/dataset-sp/dataset-sp.client';
 
 @Injectable()
 export class SeparacaoService {
@@ -209,34 +210,17 @@ export class SeparacaoService {
     return response;
   }
 
-  async getItensConferidos({ numeroUnico }: NumeroUnicoFilter) {
+  async getItensConferidos({ numeroConferencia }: NumeroConferenciaFilter) {
     const sql = `
     SELECT 
-    PRO.IMAGEM AS imagem, 
+    COI2.CODPROD AS idProduto 
 
-    ITE.CODPROD AS idProduto, 
-    PRO.DESCRPROD AS nomeProduto, 
+    FROM TGFCOI2 COI2 
 
-    ITE.QTDNEG AS quantidade, 
-    ITE.CODVOL AS unidade, 
-
-    PRO.CODMARCA AS idMarca, 
-    PRO.MARCA AS nomeMarca, 
-
-    PAR.CODPARC AS idFornecedor, 
-    PAR.NOMEPARC AS nomeFornecedor, 
-
-    ITE.CONTROLE AS controle, 
-    PRO.COMPLDESC AS complemento 
-
-    FROM TGFITE ITE 
-
-    INNER JOIN TGFPRO PRO ON PRO.CODPROD = ITE.CODPROD 
-    LEFT JOIN TGFPAR PAR ON PAR.CODPARC = PRO.CODPARCFORN 
-
-    WHERE NUNOTA = ${numeroUnico} 
+    WHERE NUCONF = ${numeroConferencia} 
     `;
-    const response = await this.dbExplorerClient.executeQuery(sql);
+    let response = await this.dbExplorerClient.executeQuery(sql);
+    response = response.map(({ idProduto }) => idProduto);
     return response;
   }
 

@@ -4,10 +4,19 @@ import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 // Filter
 export class NumeroUnicoFilter {
-  @ApiProperty({ example: '1234' })
-  @IsString()
+  @ApiProperty({ example: 1234 })
+  @Type(() => Number)
+  @IsNumber()
   @IsNotEmpty()
-  numeroUnico: string;
+  numeroUnico: number;
+}
+
+export class NumeroConferenciaFilter {
+  @ApiProperty({ example: 1234 })
+  @Type(() => Number)
+  @IsNumber()
+  @IsNotEmpty()
+  numeroConferencia: number;
 }
 
 export class IdAndControleProdutoFilter {

@@ -6,6 +6,7 @@ import {
   IdAndControleProdutoFilter,
   NumeroUnicoFilter,
   IniciarConferenciaBody,
+  NumeroConferenciaFilter,
 } from './dto/separacao.dto';
 
 @UseGuards(AuthUserGuard)
@@ -24,6 +25,12 @@ export class SeparacaoController {
   @ApiOperation({ summary: 'Listar Itens Pedidos' })
   getItensPedido(@Query() queryParam: NumeroUnicoFilter) {
     return this.service.getItensPedido(queryParam);
+  }
+
+  @Get('itens-conferidos')
+  @ApiOperation({ summary: 'Listar Itens Conferidos' })
+  getItensConferidos(@Query() queryParam: NumeroConferenciaFilter) {
+    return this.service.getItensConferidos(queryParam);
   }
 
   @Get('codigos-barra')
