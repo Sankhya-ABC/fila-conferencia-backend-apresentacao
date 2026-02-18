@@ -209,6 +209,37 @@ export class SeparacaoService {
     return response;
   }
 
+  async getItensConferidos({ numeroUnico }: NumeroUnicoFilter) {
+    const sql = `
+    SELECT 
+    PRO.IMAGEM AS imagem, 
+
+    ITE.CODPROD AS idProduto, 
+    PRO.DESCRPROD AS nomeProduto, 
+
+    ITE.QTDNEG AS quantidade, 
+    ITE.CODVOL AS unidade, 
+
+    PRO.CODMARCA AS idMarca, 
+    PRO.MARCA AS nomeMarca, 
+
+    PAR.CODPARC AS idFornecedor, 
+    PAR.NOMEPARC AS nomeFornecedor, 
+
+    ITE.CONTROLE AS controle, 
+    PRO.COMPLDESC AS complemento 
+
+    FROM TGFITE ITE 
+
+    INNER JOIN TGFPRO PRO ON PRO.CODPROD = ITE.CODPROD 
+    LEFT JOIN TGFPAR PAR ON PAR.CODPARC = PRO.CODPARCFORN 
+
+    WHERE NUNOTA = ${numeroUnico} 
+    `;
+    const response = await this.dbExplorerClient.executeQuery(sql);
+    return response;
+  }
+
   async getCodigosDeBarra({ idProduto, controle }: IdAndControleProdutoFilter) {
     const sql = `
     SELECT 
