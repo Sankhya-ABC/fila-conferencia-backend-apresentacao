@@ -41,6 +41,70 @@ export class SeparacaoService {
       );
     }
 
+    // conferir se já tem numeroConferencia e o status não foi atualizado
+    let isThereANumeroConferencia = false;
+    let numeroConferenciaExistente = null;
+    try {
+      const checkNumeroConferenciaResponse = await this.dbExplorerClient
+        .executeQuery(`
+        SELECT
+        CODUSUCONF,
+        NUCONF
+        FROM TGFCON2
+        WHERE NUNOTAORIG = ${numeroUnico}
+        AND NUCONF IS NOT NULL
+        `);
+      isThereANumeroConferencia = checkNumeroConferenciaResponse?.length > 0;
+      numeroConferenciaExistente =
+        checkNumeroConferenciaResponse?.[
+          checkNumeroConferenciaResponse?.length - 1
+        ]?.NUCONF;
+
+      console.log(
+        'aqui',
+        numeroUnico,
+        checkNumeroConferenciaResponse,
+        isThereANumeroConferencia,
+        numeroConferenciaExistente,
+      );
+    } catch (error) {
+      throw new BadRequestException('Erro ao consultar status da conferência.');
+    }
+    if (isThereANumeroConferencia) {
+      try {
+        let [date, hour] = new Date().toISOString().slice(0, 19).split('T');
+        date = date.split('-').reverse().join('/');
+        hour = hour.slice(0, 5);
+
+        const responseCabecalhoConferencia = await this.datasetSP.save({
+          entityName: 'CabecalhoConferencia',
+          pk: { NUCONF: numeroConferenciaExistente },
+          fieldsAndValues: {
+            CODUSUCONF: idUsuario,
+            DHFINCONF: null,
+            DHINICONF: `${date} ${hour}`,
+            NUCONFORIG: null,
+            NUNOTADEV: null,
+            NUNOTAORIG: numeroUnico,
+            NUPEDCOMP: null,
+            QTDVOL: 0,
+            STATUS: 'A',
+          },
+        });
+        console.log(
+          'antesss',
+          responseCabecalhoConferencia,
+          responseCabecalhoConferencia.requestBody.fields,
+          responseCabecalhoConferencia.requestBody.records,
+          responseCabecalhoConferencia.requestBody.records.values,
+        );
+      } catch (error) {
+        throw new BadRequestException(
+          'Erro ao atualizar número de conferência no cabeçalho da conferência.',
+        );
+      }
+    }
+
     // obter último número de conferência
     let numeroConferencia = null;
     let codmoddoc = null;
@@ -80,20 +144,6 @@ export class SeparacaoService {
       throw new BadRequestException('Erro ao atualizar número de conferência.');
     }
 
-    // atualizar tgfcab com o novo número de conferência
-    try {
-      const responseCabecalhoNota = await this.datasetSP.save({
-        entityName: 'CabecalhoNota',
-        fieldsAndValues: { NUCONFATUAL: numeroConferencia },
-        pk: { NUNOTA: numeroUnico },
-      });
-      console.log(4, responseCabecalhoNota);
-    } catch (error) {
-      throw new BadRequestException(
-        'Erro ao atualizar número de conferência no cabeçalho da nota.',
-      );
-    }
-
     // inserir nova conferência na tabela de conferências
     let [date, hour] = new Date().toISOString().slice(0, 19).split('T');
     date = date.split('-').reverse().join('/');
@@ -102,35 +152,49 @@ export class SeparacaoService {
     try {
       const responseCabecalhoConferencia = await this.datasetSP.save({
         entityName: 'CabecalhoConferencia',
+        pk: { NUCONF: numeroConferencia },
         fieldsAndValues: {
           CODUSUCONF: idUsuario,
           DHFINCONF: null,
           DHINICONF: `${date} ${hour}`,
+          NUCONF: numeroConferencia,
           NUCONFORIG: null,
           NUNOTADEV: null,
-          NUNOTAORIG: numeroNota,
+          NUNOTAORIG: numeroUnico,
           NUPEDCOMP: null,
           QTDVOL: 0,
           STATUS: 'A',
         },
       });
-      console.log(5, responseCabecalhoConferencia);
+      console.log(
+        5,
+        responseCabecalhoConferencia,
+        responseCabecalhoConferencia.requestBody.fields,
+        responseCabecalhoConferencia.requestBody.records,
+        responseCabecalhoConferencia.requestBody.records.values,
+      );
     } catch (error) {
-      try {
-        const responseCabecalhoNotaUndo = await this.datasetSP.save({
-          entityName: 'CabecalhoNota',
-          fieldsAndValues: { NUCONFATUAL: null },
-          pk: { NUNOTA: numeroUnico },
-        });
-        console.log(6, responseCabecalhoNotaUndo);
-        throw new BadRequestException(
-          'Erro ao iniciar andamento dessa conferência.',
-        );
-      } catch (error) {
-        throw new BadRequestException(
-          'Erro ao iniciar andamento dessa conferência. E erro ao desfazer atualização do número de conferência no cabeçalho da nota.',
-        );
-      }
+      throw new BadRequestException(
+        'Erro ao atualizar número de conferência no cabeçalho da conferência.',
+      );
+    }
+
+    // atualizar tgfcab com o novo número de conferência
+    try {
+      const responseCabecalhoNota = await this.datasetSP.save({
+        entityName: 'CabecalhoNota',
+        fieldsAndValues: { NUCONFATUAL: numeroConferencia },
+        pk: { NUNOTA: numeroUnico },
+      });
+      console.log(
+        4,
+        responseCabecalhoNota,
+        responseCabecalhoNota.requestBody.records,
+      );
+    } catch (error) {
+      throw new BadRequestException(
+        'Erro ao atualizar número de conferência no cabeçalho da nota.',
+      );
     }
 
     return { numeroConferencia };
