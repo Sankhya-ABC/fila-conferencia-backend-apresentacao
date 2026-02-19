@@ -20,184 +20,130 @@ export class SeparacaoService {
     numeroNota,
     numeroUnico,
   }: IniciarConferenciaBody) {
-    // consulta o status
-    let status = null;
+    /* ======================================================
+     * 1️⃣ VALIDAR STATUS (PRECISA SER AC)
+     * ====================================================== */
+    let status: string;
+
     try {
-      const statusResponse = await this.dbExplorerClient.executeQuery(`
-      SELECT 
-      sankhya.SNK_GET_SATUSCONFERENCIA(CAB.NUNOTA) AS codigoStatus 
-      FROM TGFCAB CAB 
-      WHERE CAB.NUNOTA = ${numeroUnico} 
+      const res = await this.dbExplorerClient.executeQuery(`
+      SELECT sankhya.SNK_GET_SATUSCONFERENCIA(${numeroUnico}) AS STATUS
+      FROM DUAL
     `);
-      status = statusResponse?.[0]?.codigoStatus;
-      console.log(1, statusResponse);
-    } catch (error) {
+      status = res?.[0]?.STATUS;
+    } catch {
       throw new BadRequestException('Erro ao consultar status da conferência.');
     }
 
     if (status !== 'AC') {
       throw new BadRequestException(
-        'Para iniciar a conferência, o pedido deve estar com status "Aguardando Conferência"',
+        'Para iniciar a conferência, o pedido deve estar com status "Aguardando Conferência".',
       );
     }
 
-    // conferir se já tem numeroConferencia e o status não foi atualizado
-    let isThereANumeroConferencia = false;
-    let numeroConferenciaExistente = null;
-    try {
-      const checkNumeroConferenciaResponse = await this.dbExplorerClient
-        .executeQuery(`
-        SELECT
-        CODUSUCONF,
-        NUCONF
-        FROM TGFCON2
-        WHERE NUNOTAORIG = ${numeroUnico}
-        AND NUCONF IS NOT NULL
-        `);
-      isThereANumeroConferencia = checkNumeroConferenciaResponse?.length > 0;
-      numeroConferenciaExistente =
-        checkNumeroConferenciaResponse?.[
-          checkNumeroConferenciaResponse?.length - 1
-        ]?.NUCONF;
+    /* ======================================================
+     * 2️⃣ VERIFICAR SE JÁ EXISTE CONFERÊNCIA (DEFENSIVO)
+     * ====================================================== */
+    const existente = await this.dbExplorerClient.executeQuery(`
+    SELECT NUCONF
+    FROM TGFCON2
+    WHERE NUNOTAORIG = ${numeroUnico}
+      AND NUCONF IS NOT NULL
+      AND STATUS = 'A'
+    FETCH FIRST 1 ROWS ONLY
+  `);
 
-      console.log(
-        'aqui',
-        numeroUnico,
-        checkNumeroConferenciaResponse,
-        isThereANumeroConferencia,
-        numeroConferenciaExistente,
+    if (existente.length > 0) {
+      throw new BadRequestException(
+        `Já existe conferência em andamento (NUCONF ${existente[0].NUCONF}).`,
       );
-    } catch (error) {
-      throw new BadRequestException('Erro ao consultar status da conferência.');
-    }
-    if (isThereANumeroConferencia) {
-      try {
-        let [date, hour] = new Date().toISOString().slice(0, 19).split('T');
-        date = date.split('-').reverse().join('/');
-        hour = hour.slice(0, 5);
-
-        const responseCabecalhoConferencia = await this.datasetSP.save({
-          entityName: 'CabecalhoConferencia',
-          pk: { NUCONF: numeroConferenciaExistente },
-          fieldsAndValues: {
-            CODUSUCONF: idUsuario,
-            DHFINCONF: null,
-            DHINICONF: `${date} ${hour}`,
-            NUCONFORIG: null,
-            NUNOTADEV: null,
-            NUNOTAORIG: numeroUnico,
-            NUPEDCOMP: null,
-            QTDVOL: 0,
-            STATUS: 'A',
-          },
-        });
-        console.log(
-          'antesss',
-          responseCabecalhoConferencia,
-          responseCabecalhoConferencia.requestBody.fields,
-          responseCabecalhoConferencia.requestBody.records,
-          responseCabecalhoConferencia.requestBody.records.values,
-        );
-      } catch (error) {
-        throw new BadRequestException(
-          'Erro ao atualizar número de conferência no cabeçalho da conferência.',
-        );
-      }
     }
 
-    // obter último número de conferência
-    let numeroConferencia = null;
-    let codmoddoc = null;
+    /* ======================================================
+     * 3️⃣ GERAR NOVO NUCONF
+     * ====================================================== */
+    let numeroConferencia: number;
+
     try {
-      const numeroConferenciaResponse = await this.dbExplorerClient
-        .executeQuery(`
-        SELECT ULTCOD AS numeroConferencia, 
-        CODMODDOC AS codmoddoc 
-        FROM TGFNUM 
-        WHERE ARQUIVO = 'TGFCON2' AND CODEMP = 1 AND SERIE = '.' 
-        `);
+      const res = await this.dbExplorerClient.executeQuery(`
+      SELECT ULTCOD
+      FROM TGFNUM
+      WHERE ARQUIVO = 'TGFCON2'
+        AND CODEMP = 1
+        AND SERIE = '.'
+    `);
 
-      numeroConferencia = numeroConferenciaResponse[0].numeroConferencia + 1;
-      codmoddoc = numeroConferenciaResponse[0].codmoddoc;
-
-      console.log(2, numeroConferenciaResponse, {
-        numeroConferencia,
-        codmoddoc,
-      });
-    } catch (error) {
+      numeroConferencia = res[0].ULTCOD + 1;
+    } catch {
       throw new BadRequestException('Erro ao obter número de conferência.');
     }
 
-    // atualizar número de conferência
+    /* ======================================================
+     * 4️⃣ ATUALIZAR CONTROLE DE NUMERAÇÃO
+     * ====================================================== */
     try {
-      const responseControleNumeracao = await this.datasetSP.save({
+      await this.datasetSP.save({
         entityName: 'ControleNumeracao',
-        fieldsAndValues: { ULTCOD: numeroConferencia },
-        pk: { ARQUIVO: 'TGFCON2', CODEMP: 1, SERIE: '.', CODMODDOC: 0 },
+        pk: {
+          ARQUIVO: 'TGFCON2',
+          CODEMP: 1,
+          SERIE: '.',
+          CODMODDOC: 0,
+        },
+        fieldsAndValues: {
+          ULTCOD: numeroConferencia,
+        },
       });
-      console.log(
-        3,
-        responseControleNumeracao,
-        responseControleNumeracao.responseBody.result,
-      );
-    } catch (error) {
-      throw new BadRequestException('Erro ao atualizar número de conferência.');
+    } catch {
+      throw new BadRequestException('Erro ao atualizar controle de numeração.');
     }
 
-    // inserir nova conferência na tabela de conferências
-    let [date, hour] = new Date().toISOString().slice(0, 19).split('T');
-    date = date.split('-').reverse().join('/');
-    hour = hour.slice(0, 5);
+    /* ======================================================
+     * 5️⃣ INSERIR TGFCON2
+     * ====================================================== */
+    const now = new Date();
+    const date = now.toISOString().slice(0, 10).split('-').reverse().join('/');
+    const hour = now.toISOString().slice(11, 16);
 
     try {
-      const responseCabecalhoConferencia = await this.datasetSP.save({
+      await this.datasetSP.save({
         entityName: 'CabecalhoConferencia',
-        pk: { NUCONF: numeroConferencia },
         fieldsAndValues: {
-          CODUSUCONF: idUsuario,
-          DHFINCONF: null,
-          DHINICONF: `${date} ${hour}`,
           NUCONF: numeroConferencia,
-          NUCONFORIG: null,
-          NUNOTADEV: null,
+          CODUSUCONF: idUsuario,
+          DHINICONF: `${date} ${hour}`,
+          DHFINCONF: null,
           NUNOTAORIG: numeroUnico,
-          NUPEDCOMP: null,
           QTDVOL: 0,
           STATUS: 'A',
         },
       });
-      console.log(
-        5,
-        responseCabecalhoConferencia,
-        responseCabecalhoConferencia.requestBody.fields,
-        responseCabecalhoConferencia.requestBody.records,
-        responseCabecalhoConferencia.requestBody.records.values,
-      );
-    } catch (error) {
-      throw new BadRequestException(
-        'Erro ao atualizar número de conferência no cabeçalho da conferência.',
-      );
+    } catch {
+      throw new BadRequestException('Erro ao criar cabeçalho da conferência.');
     }
 
-    // atualizar tgfcab com o novo número de conferência
+    /* ======================================================
+     * 6️⃣ ATUALIZAR TGFCAB
+     * ====================================================== */
     try {
-      const responseCabecalhoNota = await this.datasetSP.save({
+      await this.datasetSP.save({
         entityName: 'CabecalhoNota',
-        fieldsAndValues: { NUCONFATUAL: numeroConferencia },
-        pk: { NUNOTA: numeroUnico },
+        pk: {
+          NUNOTA: numeroUnico,
+        },
+        fieldsAndValues: {
+          NUCONFATUAL: numeroConferencia,
+        },
       });
-      console.log(
-        4,
-        responseCabecalhoNota,
-        responseCabecalhoNota.requestBody.records,
-      );
-    } catch (error) {
+    } catch {
       throw new BadRequestException(
-        'Erro ao atualizar número de conferência no cabeçalho da nota.',
+        'Erro ao vincular conferência ao cabeçalho da nota.',
       );
     }
 
-    return { numeroConferencia };
+    return {
+      numeroConferencia,
+    };
   }
 
   async getDadosBasicos({ numeroUnico }: NumeroUnicoFilter) {
@@ -297,6 +243,7 @@ export class SeparacaoService {
     return response;
   }
 
+  // auxiliar itens pedidos
   async getCodigosDeBarra({ idProduto, controle }: IdAndControleProdutoFilter) {
     const sql = `
     SELECT 

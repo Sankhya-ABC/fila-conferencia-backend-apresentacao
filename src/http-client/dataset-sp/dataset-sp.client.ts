@@ -51,13 +51,6 @@ export class SankhyaDatasetSPClient {
       },
     };
 
-    console.log('-- save --');
-    console.log(body);
-    console.log(fields);
-    console.log(body.requestBody.records);
-    console.log(valuesMap);
-    console.log('-- end save --');
-
     if (pk) {
       body.requestBody.records[0].pk = pk;
     }
