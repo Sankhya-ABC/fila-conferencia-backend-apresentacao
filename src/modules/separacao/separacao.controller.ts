@@ -15,6 +15,12 @@ import {
 export class SeparacaoController {
   constructor(private readonly service: SeparacaoService) {}
 
+  @Post('iniciar-conferencia')
+  @ApiOperation({ summary: 'Iniciar Conferência de um Pedido' })
+  postIniciarConferencia(@Body() body: IniciarConferenciaBody) {
+    return this.service.postIniciarConferencia(body);
+  }
+
   @Get('dados-basicos')
   @ApiOperation({ summary: 'Dados básicos do pedido' })
   getDadosBasicos(@Query() queryParam: NumeroUnicoFilter) {
@@ -33,15 +39,9 @@ export class SeparacaoController {
     return this.service.getItensConferidos(queryParam);
   }
 
-  @Get('codigos-barra')
-  @ApiOperation({ summary: 'Listar Códigos de Barra de um Produto' })
-  getCodigosDeBarra(@Query() queryParam: IdAndControleProdutoFilter) {
-    return this.service.getCodigosDeBarra(queryParam);
-  }
-
-  @Post('iniciar-conferencia')
-  @ApiOperation({ summary: 'Iniciar Conferência de um Pedido' })
-  postIniciarConferencia(@Body() body: IniciarConferenciaBody) {
-    return this.service.postIniciarConferencia(body);
+  @Get('volumes')
+  @ApiOperation({ summary: 'Listar Volumes' })
+  getVolumes(@Query() queryParam: NumeroConferenciaFilter) {
+    return this.service.getVolumes(queryParam);
   }
 }

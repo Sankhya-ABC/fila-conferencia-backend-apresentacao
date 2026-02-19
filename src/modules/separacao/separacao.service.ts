@@ -17,6 +17,173 @@ export class SeparacaoService {
     private readonly datasetSP: SankhyaDatasetSPClient,
   ) {}
 
+  async postIniciarConferencia({
+    idUsuario,
+    numeroUnico,
+  }: IniciarConferenciaBody) {
+    await this.verificarStatus({ numeroUnico });
+
+    await this.verificarConferencia({ numeroUnico });
+
+    let numeroConferencia: number = await this.obterNumeroConferencia();
+    await this.atualizarNumeroConferencia({ numeroConferencia });
+
+    await this.atualizarCabecalhoConferencia({
+      numeroUnico,
+      numeroConferencia,
+      idUsuario,
+    });
+
+    await this.atualizarCabecalhoNota({ numeroUnico, numeroConferencia });
+
+    return { numeroConferencia };
+  }
+
+  async getDadosBasicos({ numeroUnico }: NumeroUnicoFilter) {
+    const sql = `
+    SELECT 
+    CAB.NUNOTA AS numeroUnico, 
+    CAB.NUMNOTA AS numeroNota, 
+    CAB.AD_NUMTALAO AS numeroModial, 
+    CAB.NUCONFATUAL AS numeroConferencia, 
+
+    sankhya.SNK_GET_SATUSCONFERENCIA(CAB.NUNOTA) AS codigoStatus, 
+    CAB.TIPMOV AS codigoTipoMovimento, 
+
+    PAR.CODPARC AS idParceiro, 
+    PAR.RAZAOSOCIAL AS nomeParceiro, 
+
+    VEN.CODVEND AS idVendedor, 
+    VEN.APELIDO AS nomeVendedor 
+
+    FROM TGFCAB CAB 
+
+    LEFT JOIN TGFPAR PAR 
+    ON PAR.CODPARC = CAB.CODPARC 
+
+    LEFT JOIN TGFVEN VEN 
+    ON VEN.CODVEND = CAB.CODVEND 
+
+    WHERE CAB.NUNOTA = ${numeroUnico} 
+    `;
+    const response = await this.dbExplorerClient.executeQuery(sql);
+    return response?.[0];
+  }
+
+  async getItensPedido({ numeroUnico }: NumeroUnicoFilter) {
+    const sql = `
+    SELECT 
+    PRO.IMAGEM AS imagem, 
+
+    ITE.CODPROD AS idProduto, 
+    PRO.DESCRPROD AS nomeProduto, 
+
+    ITE.QTDNEG AS quantidade, 
+    ITE.CODVOL AS unidade, 
+
+    PRO.CODMARCA AS idMarca, 
+    PRO.MARCA AS nomeMarca, 
+
+    PAR.CODPARC AS idFornecedor, 
+    PAR.NOMEPARC AS nomeFornecedor, 
+
+    ITE.CONTROLE AS controle, 
+    PRO.COMPLDESC AS complemento 
+
+    FROM TGFITE ITE 
+
+    INNER JOIN TGFPRO PRO ON PRO.CODPROD = ITE.CODPROD 
+    LEFT JOIN TGFPAR PAR ON PAR.CODPARC = PRO.CODPARCFORN 
+
+    WHERE NUNOTA = ${numeroUnico} 
+    `;
+    let response = await this.dbExplorerClient.executeQuery(sql);
+
+    response = await Promise.all(
+      response?.map(async (data) => {
+        const { idProduto, controle, imagem } = data;
+        let imagemBase64: string | null = null;
+        if (imagem) {
+          imagemBase64 = Buffer.from(imagem, 'hex').toString('base64');
+        }
+
+        let codigoBarras = await this.getCodigosDeBarra({
+          idProduto,
+          controle,
+        });
+        codigoBarras = codigoBarras?.map((codigoBarra) =>
+          codigoBarra.CODIGO?.trim(),
+        );
+        return { ...data, codigoBarras, imagem: imagemBase64 };
+      }),
+    );
+
+    return response;
+  }
+
+  async getItensConferidos({ numeroConferencia }: NumeroConferenciaFilter) {
+    const sql = `
+    SELECT
+    CODPROD AS idProduto, 
+    SUM(QTD) AS quantidade 
+
+    FROM TGFIVC 
+
+    WHERE NUCONF = ${numeroConferencia}  
+    GROUP BY CODPROD
+    `;
+    const response = await this.dbExplorerClient.executeQuery(sql);
+    return response;
+  }
+
+  async getVolumes({ numeroConferencia }: NumeroConferenciaFilter) {
+    const sql = `
+    SELECT
+      IVC.SEQVOL AS numeroVolume, 
+      IVC.CODPROD AS idProduto, 
+      PRO.DESCRPROD AS descricaoProduto, 
+      PRO.IMAGEM AS imagem, 
+      IVC.QTD AS quantidade, 
+      IVC.CODVOL AS unidade 
+    FROM TGFIVC IVC 
+    JOIN TGFPRO PRO 
+      ON PRO.CODPROD = IVC.CODPROD 
+    WHERE IVC.NUCONF = ${numeroConferencia} 
+    ORDER BY IVC.SEQVOL, IVC.SEQITEM;
+    `;
+
+    let response = await this.dbExplorerClient.executeQuery(sql);
+
+    response = await Promise.all(
+      response?.map(async (data) => {
+        const { imagem } = data;
+        let imagemBase64: string | null = null;
+        if (imagem) {
+          imagemBase64 = Buffer.from(imagem, 'hex').toString('base64');
+        }
+
+        return { ...data, imagem: imagemBase64 };
+      }),
+    );
+
+    return response;
+  }
+
+  // auxiliares
+  async getCodigosDeBarra({ idProduto, controle }: IdAndControleProdutoFilter) {
+    const sql = `
+    SELECT 
+    DISTINCT 
+    VW_CP.CODIGO 
+
+    FROM VW_CODIGOS_PRODUTO VW_CP 
+
+    WHERE VW_CP.CODPROD = ${idProduto} AND VW_CP.CONTROLE = '${controle}' 
+    `;
+    const response = await this.dbExplorerClient.executeQuery(sql);
+    return response;
+  }
+
   async verificarStatus({ numeroUnico }: NumeroUnicoFilter) {
     let status: string;
 
@@ -137,139 +304,5 @@ export class SeparacaoService {
         'Erro ao vincular conferência ao cabeçalho da nota.',
       );
     }
-  }
-
-  async postIniciarConferencia({
-    idUsuario,
-    numeroUnico,
-  }: IniciarConferenciaBody) {
-    await this.verificarStatus({ numeroUnico });
-
-    await this.verificarConferencia({ numeroUnico });
-
-    let numeroConferencia: number = await this.obterNumeroConferencia();
-    await this.atualizarNumeroConferencia({ numeroConferencia });
-
-    await this.atualizarCabecalhoConferencia({
-      numeroUnico,
-      numeroConferencia,
-      idUsuario,
-    });
-
-    await this.atualizarCabecalhoNota({ numeroUnico, numeroConferencia });
-
-    return { numeroConferencia };
-  }
-
-  async getDadosBasicos({ numeroUnico }: NumeroUnicoFilter) {
-    const sql = `
-    SELECT 
-    CAB.NUNOTA AS numeroUnico, 
-    CAB.NUMNOTA AS numeroNota, 
-    CAB.AD_NUMTALAO AS numeroModial, 
-    CAB.NUCONFATUAL AS numeroConferencia, 
-
-    sankhya.SNK_GET_SATUSCONFERENCIA(CAB.NUNOTA) AS codigoStatus, 
-    CAB.TIPMOV AS codigoTipoMovimento, 
-
-    PAR.CODPARC AS idParceiro, 
-    PAR.RAZAOSOCIAL AS nomeParceiro, 
-
-    VEN.CODVEND AS idVendedor, 
-    VEN.APELIDO AS nomeVendedor 
-
-    FROM TGFCAB CAB 
-
-    LEFT JOIN TGFPAR PAR 
-    ON PAR.CODPARC = CAB.CODPARC 
-
-    LEFT JOIN TGFVEN VEN 
-    ON VEN.CODVEND = CAB.CODVEND 
-
-    WHERE CAB.NUNOTA = ${numeroUnico} 
-    `;
-    const response = await this.dbExplorerClient.executeQuery(sql);
-    return response?.[0];
-  }
-
-  async getItensPedido({ numeroUnico }: NumeroUnicoFilter) {
-    const sql = `
-    SELECT 
-    PRO.IMAGEM AS imagem, 
-
-    ITE.CODPROD AS idProduto, 
-    PRO.DESCRPROD AS nomeProduto, 
-
-    ITE.QTDNEG AS quantidade, 
-    ITE.CODVOL AS unidade, 
-
-    PRO.CODMARCA AS idMarca, 
-    PRO.MARCA AS nomeMarca, 
-
-    PAR.CODPARC AS idFornecedor, 
-    PAR.NOMEPARC AS nomeFornecedor, 
-
-    ITE.CONTROLE AS controle, 
-    PRO.COMPLDESC AS complemento 
-
-    FROM TGFITE ITE 
-
-    INNER JOIN TGFPRO PRO ON PRO.CODPROD = ITE.CODPROD 
-    LEFT JOIN TGFPAR PAR ON PAR.CODPARC = PRO.CODPARCFORN 
-
-    WHERE NUNOTA = ${numeroUnico} 
-    `;
-    let response = await this.dbExplorerClient.executeQuery(sql);
-
-    response = await Promise.all(
-      response?.map(async (data) => {
-        const { idProduto, controle, imagem } = data;
-        let imagemBase64: string | null = null;
-        if (imagem) {
-          imagemBase64 = Buffer.from(imagem, 'hex').toString('base64');
-        }
-
-        let codigoBarras = await this.getCodigosDeBarra({
-          idProduto,
-          controle,
-        });
-        codigoBarras = codigoBarras?.map((codigoBarra) =>
-          codigoBarra.CODIGO?.trim(),
-        );
-        return { ...data, codigoBarras, imagem: imagemBase64 };
-      }),
-    );
-
-    return response;
-  }
-
-  async getItensConferidos({ numeroConferencia }: NumeroConferenciaFilter) {
-    const sql = `
-    SELECT
-    CODPROD AS idProduto, 
-    SUM(QTD) AS quantidade 
-
-    FROM TGFIVC 
-
-    WHERE NUCONF = ${numeroConferencia}  
-    GROUP BY CODPROD
-    `;
-    const response = await this.dbExplorerClient.executeQuery(sql);
-    return response;
-  }
-
-  // auxiliar itens pedidos
-  async getCodigosDeBarra({ idProduto, controle }: IdAndControleProdutoFilter) {
-    const sql = `
-    SELECT 
-    DISTINCT 
-    VW_CP.CODIGO 
-
-    FROM VW_CODIGOS_PRODUTO VW_CP 
-
-    WHERE VW_CP.CODPROD = ${idProduto} AND VW_CP.CONTROLE = '${controle}' 
-    `;
-    const response = await this.dbExplorerClient.executeQuery(sql);
-    return response;
   }
 }
