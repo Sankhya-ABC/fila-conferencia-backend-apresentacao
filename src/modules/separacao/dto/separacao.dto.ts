@@ -42,11 +42,39 @@ export class IniciarConferenciaBody {
   @Type(() => Number)
   @IsNumber()
   @IsNotEmpty()
-  numeroNota: number;
+  numeroUnico: number;
+}
 
+export class AtualizarCabecalhoConferenciaParams {
   @ApiProperty({ example: 1234 })
   @Type(() => Number)
   @IsNumber()
   @IsNotEmpty()
   numeroUnico: number;
+
+  @ApiProperty({ example: 1234 })
+  @Type(() => Number)
+  @IsNumber()
+  @IsNotEmpty()
+  numeroConferencia: number;
+
+  @ApiProperty({ example: 1234 })
+  @Type(() => Number)
+  @IsNumber()
+  @IsNotEmpty()
+  idUsuario: number;
+}
+
+export class AtualizarCabecalhoNotaParams {
+  @ApiProperty({ example: 1234 })
+  @Type(() => Number)
+  @IsNumber()
+  @IsNotEmpty()
+  numeroUnico: number;
+
+  @ApiProperty({ example: 1234 })
+  @Type(() => Number)
+  @IsNumber()
+  @IsNotEmpty()
+  numeroConferencia: number;
 }

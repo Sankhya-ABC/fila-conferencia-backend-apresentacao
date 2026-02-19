@@ -2,6 +2,8 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { SankhyaDatasetSPClient } from 'src/http-client/dataset-sp/dataset-sp.client';
 import { SankhyaDBExplorerSPClient } from 'src/http-client/db-explorer-sp/db-explorer-sp.client';
 import {
+  AtualizarCabecalhoConferenciaParams,
+  AtualizarCabecalhoNotaParams,
   IdAndControleProdutoFilter,
   IniciarConferenciaBody,
   NumeroConferenciaFilter,
@@ -15,14 +17,7 @@ export class SeparacaoService {
     private readonly datasetSP: SankhyaDatasetSPClient,
   ) {}
 
-  async postIniciarConferencia({
-    idUsuario,
-    numeroNota,
-    numeroUnico,
-  }: IniciarConferenciaBody) {
-    /* ======================================================
-     * 1️⃣ VALIDAR STATUS (PRECISA SER AC)
-     * ====================================================== */
+  async verificarStatus({ numeroUnico }: NumeroUnicoFilter) {
     let status: string;
 
     try {
@@ -40,10 +35,9 @@ export class SeparacaoService {
         'Para iniciar a conferência, o pedido deve estar com status "Aguardando Conferência".',
       );
     }
+  }
 
-    /* ======================================================
-     * 2️⃣ VERIFICAR SE JÁ EXISTE CONFERÊNCIA (DEFENSIVO)
-     * ====================================================== */
+  async verificarConferencia({ numeroUnico }: NumeroUnicoFilter) {
     const existente = await this.dbExplorerClient.executeQuery(`
     SELECT NUCONF
     FROM TGFCON2
@@ -58,12 +52,9 @@ export class SeparacaoService {
         `Já existe conferência em andamento (NUCONF ${existente[0].NUCONF}).`,
       );
     }
+  }
 
-    /* ======================================================
-     * 3️⃣ GERAR NOVO NUCONF
-     * ====================================================== */
-    let numeroConferencia: number;
-
+  async obterNumeroConferencia() {
     try {
       const res = await this.dbExplorerClient.executeQuery(`
       SELECT ULTCOD
@@ -73,14 +64,15 @@ export class SeparacaoService {
         AND SERIE = '.'
     `);
 
-      numeroConferencia = res[0].ULTCOD + 1;
+      return res[0].ULTCOD + 1;
     } catch {
       throw new BadRequestException('Erro ao obter número de conferência.');
     }
+  }
 
-    /* ======================================================
-     * 4️⃣ ATUALIZAR CONTROLE DE NUMERAÇÃO
-     * ====================================================== */
+  async atualizarNumeroConferencia({
+    numeroConferencia,
+  }: NumeroConferenciaFilter) {
     try {
       await this.datasetSP.save({
         entityName: 'ControleNumeracao',
@@ -97,10 +89,13 @@ export class SeparacaoService {
     } catch {
       throw new BadRequestException('Erro ao atualizar controle de numeração.');
     }
+  }
 
-    /* ======================================================
-     * 5️⃣ INSERIR TGFCON2
-     * ====================================================== */
+  async atualizarCabecalhoConferencia({
+    numeroUnico,
+    numeroConferencia,
+    idUsuario,
+  }: AtualizarCabecalhoConferenciaParams) {
     const now = new Date();
     const date = now.toISOString().slice(0, 10).split('-').reverse().join('/');
     const hour = now.toISOString().slice(11, 16);
@@ -121,10 +116,12 @@ export class SeparacaoService {
     } catch {
       throw new BadRequestException('Erro ao criar cabeçalho da conferência.');
     }
+  }
 
-    /* ======================================================
-     * 6️⃣ ATUALIZAR TGFCAB
-     * ====================================================== */
+  async atualizarCabecalhoNota({
+    numeroUnico,
+    numeroConferencia,
+  }: AtualizarCabecalhoNotaParams) {
     try {
       await this.datasetSP.save({
         entityName: 'CabecalhoNota',
@@ -140,10 +137,28 @@ export class SeparacaoService {
         'Erro ao vincular conferência ao cabeçalho da nota.',
       );
     }
+  }
 
-    return {
+  async postIniciarConferencia({
+    idUsuario,
+    numeroUnico,
+  }: IniciarConferenciaBody) {
+    await this.verificarStatus({ numeroUnico });
+
+    await this.verificarConferencia({ numeroUnico });
+
+    let numeroConferencia: number = await this.obterNumeroConferencia();
+    await this.atualizarNumeroConferencia({ numeroConferencia });
+
+    await this.atualizarCabecalhoConferencia({
+      numeroUnico,
       numeroConferencia,
-    };
+      idUsuario,
+    });
+
+    await this.atualizarCabecalhoNota({ numeroUnico, numeroConferencia });
+
+    return { numeroConferencia };
   }
 
   async getDadosBasicos({ numeroUnico }: NumeroUnicoFilter) {
