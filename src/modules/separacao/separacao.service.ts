@@ -212,15 +212,16 @@ export class SeparacaoService {
 
   async getItensConferidos({ numeroConferencia }: NumeroConferenciaFilter) {
     const sql = `
-    SELECT 
-    COI2.CODPROD AS idProduto 
+    SELECT
+    CODPROD AS idProduto, 
+    SUM(QTD) AS quantidade 
 
-    FROM TGFCOI2 COI2 
+    FROM TGFIVC 
 
-    WHERE NUCONF = ${numeroConferencia} 
+    WHERE NUCONF = ${numeroConferencia}  
+    GROUP BY CODPROD
     `;
-    let response = await this.dbExplorerClient.executeQuery(sql);
-    response = response.map(({ idProduto }) => idProduto);
+    const response = await this.dbExplorerClient.executeQuery(sql);
     return response;
   }
 
