@@ -138,7 +138,7 @@ export class SeparacaoService {
 
   async getVolumes({ numeroConferencia }: NumeroConferenciaFilter) {
     const sql = `
-    SELECT
+    SELECT 
       IVC.SEQVOL AS numeroVolume, 
       IVC.CODPROD AS idProduto, 
       PRO.DESCRPROD AS descricaoProduto, 
@@ -149,12 +149,12 @@ export class SeparacaoService {
     JOIN TGFPRO PRO 
       ON PRO.CODPROD = IVC.CODPROD 
     WHERE IVC.NUCONF = ${numeroConferencia} 
-    ORDER BY IVC.SEQVOL, IVC.SEQITEM;
-    `;
+    ORDER BY IVC.SEQVOL, IVC.SEQITEM; 
+  `;
 
-    let response = await this.dbExplorerClient.executeQuery(sql);
+    const response = await this.dbExplorerClient.executeQuery(sql);
 
-    response = await Promise.all(
+    const rows = await Promise.all(
       response?.map(async (data) => {
         const { imagem } = data;
         let imagemBase64: string | null = null;
@@ -166,7 +166,30 @@ export class SeparacaoService {
       }),
     );
 
-    return response;
+    const volumeMap = new Map<number, any>();
+
+    for (const item of rows) {
+      const { numeroVolume } = item;
+
+      if (!volumeMap.has(numeroVolume)) {
+        volumeMap.set(numeroVolume, {
+          numeroVolume,
+          itens: [],
+        });
+      }
+
+      volumeMap.get(numeroVolume).itens.push({
+        idProduto: item.idProduto,
+        descricaoProduto: item.descricaoProduto,
+        imagem: item.imagem,
+        quantidade: item.quantidade,
+        unidade: item.unidade,
+      });
+    }
+
+    const result = Array.from(volumeMap.values());
+
+    return result;
   }
 
   // auxiliares
