@@ -30,6 +30,7 @@ export class SeparacaoService {
       WHERE CAB.NUNOTA = ${numeroUnico} 
     `);
       status = statusResponse?.[0]?.codigoStatus;
+      console.log(1, statusResponse);
     } catch (error) {
       throw new BadRequestException('Erro ao consultar status da conferência.');
     }
@@ -47,7 +48,7 @@ export class SeparacaoService {
       const numeroConferenciaResponse = await this.dbExplorerClient
         .executeQuery(`
         SELECT ULTCOD AS numeroConferencia, 
-        CODMODDOC 
+        CODMODDOC AS codmoddoc 
         FROM TGFNUM 
         WHERE ARQUIVO = 'TGFCON2' AND CODEMP = 1 AND SERIE = '.' 
         `);
@@ -55,32 +56,38 @@ export class SeparacaoService {
       numeroConferencia = numeroConferenciaResponse[0].numeroConferencia + 1;
       codmoddoc = numeroConferenciaResponse[0].codmoddoc;
 
-      console.log('1', numeroConferenciaResponse);
+      console.log(2, numeroConferenciaResponse, {
+        numeroConferencia,
+        codmoddoc,
+      });
     } catch (error) {
       throw new BadRequestException('Erro ao obter número de conferência.');
     }
 
     // atualizar número de conferência
     try {
-      const abc = await this.datasetSP.save({
+      const responseControleNumeracao = await this.datasetSP.save({
         entityName: 'ControleNumeracao',
         fieldsAndValues: { ULTCOD: numeroConferencia },
         pk: { ARQUIVO: 'TGFCON2', CODEMP: 1, SERIE: '.', CODMODDOC: 0 },
       });
-      console.log('2', abc);
-      console.log(abc.responseBody.result);
+      console.log(
+        3,
+        responseControleNumeracao,
+        responseControleNumeracao.responseBody.result,
+      );
     } catch (error) {
       throw new BadRequestException('Erro ao atualizar número de conferência.');
     }
 
     // atualizar tgfcab com o novo número de conferência
     try {
-      const agg = await this.datasetSP.save({
+      const responseCabecalhoNota = await this.datasetSP.save({
         entityName: 'CabecalhoNota',
         fieldsAndValues: { NUCONFATUAL: numeroConferencia },
         pk: { NUNOTA: numeroUnico },
       });
-      console.log('4', agg);
+      console.log(4, responseCabecalhoNota);
     } catch (error) {
       throw new BadRequestException(
         'Erro ao atualizar número de conferência no cabeçalho da nota.',
@@ -93,7 +100,7 @@ export class SeparacaoService {
     hour = hour.slice(0, 5);
 
     try {
-      const tff = await this.datasetSP.save({
+      const responseCabecalhoConferencia = await this.datasetSP.save({
         entityName: 'CabecalhoConferencia',
         fieldsAndValues: {
           CODUSUCONF: idUsuario,
@@ -107,14 +114,15 @@ export class SeparacaoService {
           STATUS: 'A',
         },
       });
-      console.log('3', tff);
+      console.log(5, responseCabecalhoConferencia);
     } catch (error) {
       try {
-        await this.datasetSP.save({
+        const responseCabecalhoNotaUndo = await this.datasetSP.save({
           entityName: 'CabecalhoNota',
           fieldsAndValues: { NUCONFATUAL: null },
           pk: { NUNOTA: numeroUnico },
         });
+        console.log(6, responseCabecalhoNotaUndo);
         throw new BadRequestException(
           'Erro ao iniciar andamento dessa conferência.',
         );

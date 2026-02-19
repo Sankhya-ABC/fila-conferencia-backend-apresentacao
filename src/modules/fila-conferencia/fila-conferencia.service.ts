@@ -78,7 +78,7 @@ export class FilaConferenciaService {
     ON OPC_TIPOENTREGA.NUCAMPO = 9999990877 
     AND OPC_TIPOENTREGA.VALOR = CAB.AD_TIPOENTREGA 
 
-    WHERE sankhya.SNK_GET_SATUSCONFERENCIA(CAB.NUNOTA) IN ('A', 'AC', 'R', 'RA', 'Z') 
+    WHERE sankhya.SNK_GET_SATUSCONFERENCIA(CAB.NUNOTA) IN ('A', 'AC') 
     `;
     const response = await this.dbExplorerClient.executeQuery(sql);
     return response;
