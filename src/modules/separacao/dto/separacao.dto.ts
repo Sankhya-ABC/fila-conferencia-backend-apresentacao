@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsEmpty, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 // Filter
 export class NumeroUnicoFilter {
@@ -77,4 +77,46 @@ export class AtualizarCabecalhoNotaParams {
   @IsNumber()
   @IsNotEmpty()
   numeroConferencia: number;
+}
+
+export class VerificarItemConferidoVolumeParams {
+  @ApiProperty({ example: 1234 })
+  @Type(() => Number)
+  @IsNumber()
+  @IsNotEmpty()
+  numeroConferencia: number;
+
+  @ApiProperty({ example: 1234 })
+  @Type(() => Number)
+  @IsNumber()
+  @IsNotEmpty()
+  numeroVolume: number;
+
+  @ApiProperty({ example: 1234 })
+  @Type(() => Number)
+  @IsNumber()
+  @IsNotEmpty()
+  idProduto: number;
+
+  @ApiProperty({ example: 1234 })
+  @Type(() => Number)
+  @IsNumber()
+  @IsNotEmpty()
+  controle: number;
+}
+
+export class AtualizarItemConferidoVolumeParams extends VerificarItemConferidoVolumeParams {
+  @ApiProperty({ example: 1234 })
+  @Type(() => Number)
+  @IsNumber()
+  @IsEmpty()
+  quantidade?: number;
+}
+
+export class InserirItemConferidoVolumeParams extends AtualizarItemConferidoVolumeParams {
+  @ApiProperty({ example: 1234 })
+  @Type(() => Number)
+  @IsNumber()
+  @IsEmpty()
+  unidade?: number;
 }

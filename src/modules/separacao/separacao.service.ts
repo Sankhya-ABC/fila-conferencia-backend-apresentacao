@@ -4,10 +4,13 @@ import { SankhyaDBExplorerSPClient } from 'src/http-client/db-explorer-sp/db-exp
 import {
   AtualizarCabecalhoConferenciaParams,
   AtualizarCabecalhoNotaParams,
+  AtualizarItemConferidoVolumeParams,
   IdAndControleProdutoFilter,
   IniciarConferenciaBody,
+  InserirItemConferidoVolumeParams,
   NumeroConferenciaFilter,
   NumeroUnicoFilter,
+  VerificarItemConferidoVolumeParams,
 } from './dto/separacao.dto';
 
 @Injectable()
@@ -17,6 +20,7 @@ export class SeparacaoService {
     private readonly datasetSP: SankhyaDatasetSPClient,
   ) {}
 
+  // posts
   async postIniciarConferencia({
     idUsuario,
     numeroUnico,
@@ -39,6 +43,42 @@ export class SeparacaoService {
     return { numeroConferencia };
   }
 
+  async postItemConferidoVolume({
+    numeroConferencia,
+    numeroVolume,
+    idProduto,
+    controle,
+    quantidade,
+    unidade,
+  }: InserirItemConferidoVolumeParams) {
+    const exists = await this.verificarItemConferidoVolume({
+      numeroConferencia,
+      numeroVolume,
+      idProduto,
+      controle,
+    });
+
+    if (exists) {
+      await this.atualizarItemConferidoVolume({
+        numeroConferencia,
+        numeroVolume,
+        idProduto,
+        controle,
+        quantidade,
+      });
+    } else {
+      await this.inserirItemConferidoVolume({
+        numeroConferencia,
+        numeroVolume,
+        idProduto,
+        controle,
+        quantidade,
+        unidade,
+      });
+    }
+  }
+
+  // gets
   async getDadosBasicos({ numeroUnico }: NumeroUnicoFilter) {
     const sql = `
     SELECT 
@@ -129,7 +169,7 @@ export class SeparacaoService {
       SUM(QTD) AS quantidade
 
     FROM TGFIVC
-    
+
     WHERE NUCONF = ${numeroConferencia}
     GROUP BY CODPROD, CONTROLE
     `;
@@ -242,6 +282,80 @@ export class SeparacaoService {
       throw new BadRequestException(
         `Já existe conferência em andamento (NUCONF ${existente[0].NUCONF}).`,
       );
+    }
+  }
+
+  async verificarItemConferidoVolume({
+    numeroConferencia,
+    numeroVolume,
+    idProduto,
+    controle,
+  }: VerificarItemConferidoVolumeParams) {
+    const existente = await this.dbExplorerClient.executeQuery(`
+    SELECT 
+      SEQITEM,
+      QTD
+    FROM TGFIVC
+    WHERE NUCONF = ${numeroConferencia}
+      AND SEQVOL = ${numeroVolume}
+      AND CODPROD = ${idProduto}
+      AND NVL(CONTROLE, ' ') = NVL('${controle ?? ' '}', ' ')
+  `);
+
+    return existente.length > 0;
+  }
+
+  async atualizarItemConferidoVolume({
+    numeroConferencia,
+    numeroVolume,
+    idProduto,
+    controle,
+    quantidade,
+  }: AtualizarItemConferidoVolumeParams) {
+    try {
+      await this.datasetSP.save({
+        entityName: 'ItemVolumeConferencia',
+        pk: {
+          NUCONF: numeroConferencia,
+          SEQVOL: numeroVolume,
+          CODPROD: idProduto,
+          CONTROLE: controle,
+        },
+        fieldsAndValues: {
+          QTD: quantidade,
+        },
+      });
+    } catch {
+      throw new BadRequestException('Erro ao atualizar item conferido/volume.');
+    }
+  }
+
+  async inserirItemConferidoVolume({
+    numeroConferencia,
+    numeroVolume,
+    idProduto,
+    controle,
+    quantidade,
+    unidade,
+  }: InserirItemConferidoVolumeParams) {
+    try {
+      await this.datasetSP.save({
+        entityName: 'ItemVolumeConferencia',
+        pk: {
+          NUCONF: numeroConferencia,
+          SEQVOL: numeroVolume,
+          SEQITEM: 'COALESCE(MAX(SEQITEM), 0) + 1',
+          CODPROD: idProduto,
+          CONTROLE: controle,
+          QTD: quantidade,
+          CODVOL: unidade,
+        },
+        fieldsAndValues: {
+          QTD: quantidade,
+        },
+      });
+    } catch {
+      throw new BadRequestException('Erro ao atualizar item conferido/volume.');
     }
   }
 
