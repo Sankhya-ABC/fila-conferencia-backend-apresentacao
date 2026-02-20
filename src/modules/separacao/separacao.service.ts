@@ -10,6 +10,7 @@ import {
   InserirItemConferidoVolumeParams,
   NumeroConferenciaFilter,
   NumeroUnicoFilter,
+  ObterProximoSeqItemParams,
   VerificarItemConferidoVolumeParams,
 } from './dto/separacao.dto';
 
@@ -51,25 +52,30 @@ export class SeparacaoService {
     quantidade,
     unidade,
   }: InserirItemConferidoVolumeParams) {
-    const exists = await this.verificarItemConferidoVolume({
+    const existente = await this.verificarItemConferidoVolume({
       numeroConferencia,
       numeroVolume,
       idProduto,
       controle,
     });
 
-    if (exists) {
+    if (existente) {
       await this.atualizarItemConferidoVolume({
         numeroConferencia,
         numeroVolume,
-        idProduto,
-        controle,
-        quantidade,
+        seqItem: existente.SEQITEM,
+        quantidade: existente.QTD + quantidade,
       });
     } else {
+      const seqItem = await this.obterProximoSeqItem({
+        numeroConferencia,
+        numeroVolume,
+      });
+
       await this.inserirItemConferidoVolume({
         numeroConferencia,
         numeroVolume,
+        seqItem,
         idProduto,
         controle,
         quantidade,
@@ -291,72 +297,74 @@ export class SeparacaoService {
     idProduto,
     controle,
   }: VerificarItemConferidoVolumeParams) {
-    const existente = await this.dbExplorerClient.executeQuery(`
-    SELECT 
-      SEQITEM,
-      QTD
+    const sql = `
+    SELECT SEQITEM, QTD
     FROM TGFIVC
     WHERE NUCONF = ${numeroConferencia}
       AND SEQVOL = ${numeroVolume}
       AND CODPROD = ${idProduto}
-      AND NVL(CONTROLE, ' ') = NVL('${controle ?? ' '}', ' ')
-  `);
+      AND NVL(CONTROLE, ' ') = NVL('${controle}', ' ')
+  `;
 
-    return existente.length > 0;
+    const res = await this.dbExplorerClient.executeQuery(sql);
+    return res?.[0] ?? null;
+  }
+
+  async obterProximoSeqItem({
+    numeroConferencia,
+    numeroVolume,
+  }: ObterProximoSeqItemParams) {
+    const sql = `
+    SELECT NVL(MAX(SEQITEM), 0) + 1 AS PROX_SEQITEM
+    FROM TGFIVC
+    WHERE NUCONF = ${numeroConferencia}
+      AND SEQVOL = ${numeroVolume}
+  `;
+
+    const res = await this.dbExplorerClient.executeQuery(sql);
+    return res[0].PROX_SEQITEM;
   }
 
   async atualizarItemConferidoVolume({
     numeroConferencia,
     numeroVolume,
-    idProduto,
-    controle,
+    seqItem,
     quantidade,
   }: AtualizarItemConferidoVolumeParams) {
-    try {
-      await this.datasetSP.save({
-        entityName: 'ItemVolumeConferencia',
-        pk: {
-          NUCONF: numeroConferencia,
-          SEQVOL: numeroVolume,
-          CODPROD: idProduto,
-          CONTROLE: controle,
-        },
-        fieldsAndValues: {
-          QTD: quantidade,
-        },
-      });
-    } catch {
-      throw new BadRequestException('Erro ao atualizar item conferido/volume.');
-    }
+    await this.datasetSP.save({
+      entityName: 'ItemVolumeConferencia',
+      pk: {
+        NUCONF: numeroConferencia,
+        SEQVOL: numeroVolume,
+        SEQITEM: seqItem,
+      },
+      fieldsAndValues: {
+        QTD: quantidade,
+      },
+    });
   }
 
   async inserirItemConferidoVolume({
     numeroConferencia,
     numeroVolume,
+    seqItem,
     idProduto,
     controle,
     quantidade,
     unidade,
   }: InserirItemConferidoVolumeParams) {
-    try {
-      await this.datasetSP.save({
-        entityName: 'ItemVolumeConferencia',
-        pk: {
-          NUCONF: numeroConferencia,
-          SEQVOL: numeroVolume,
-          SEQITEM: 'COALESCE(MAX(SEQITEM), 0) + 1',
-          CODPROD: idProduto,
-          CONTROLE: controle,
-          QTD: quantidade,
-          CODVOL: unidade,
-        },
-        fieldsAndValues: {
-          QTD: quantidade,
-        },
-      });
-    } catch {
-      throw new BadRequestException('Erro ao atualizar item conferido/volume.');
-    }
+    await this.datasetSP.save({
+      entityName: 'ItemVolumeConferencia',
+      fieldsAndValues: {
+        NUCONF: numeroConferencia,
+        SEQVOL: numeroVolume,
+        SEQITEM: seqItem,
+        CODPROD: idProduto,
+        CONTROLE: controle,
+        QTD: quantidade,
+        CODVOL: unidade,
+      },
+    });
   }
 
   async obterNumeroConferencia() {
