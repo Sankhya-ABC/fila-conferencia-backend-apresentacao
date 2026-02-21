@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsEmpty, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
 // Filter
 export class NumeroUnicoFilter {
@@ -100,7 +100,7 @@ export class PostItemConferidoVolume {
 
   @ApiProperty({ example: 'Rosa' })
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   controle: string;
 
   @ApiProperty({ example: 1234 })

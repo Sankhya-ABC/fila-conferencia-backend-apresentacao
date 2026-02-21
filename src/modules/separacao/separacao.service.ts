@@ -114,8 +114,6 @@ export class SeparacaoService {
   async getItensPedido({ numeroUnico }: NumeroUnicoFilter) {
     const sql = `
     SELECT 
-    PRO.IMAGEM AS imagem, 
-
     ITE.CODPROD AS idProduto, 
     PRO.DESCRPROD AS nomeProduto, 
 
@@ -133,10 +131,10 @@ export class SeparacaoService {
 
     FROM TGFITE ITE 
 
-    INNER JOIN TGFPRO PRO ON PRO.CODPROD = ITE.CODPROD 
+    LEFT JOIN TGFPRO PRO ON PRO.CODPROD = ITE.CODPROD 
     LEFT JOIN TGFPAR PAR ON PAR.CODPARC = PRO.CODPARCFORN 
 
-    WHERE NUNOTA = ${numeroUnico} 
+    WHERE ITE.NUNOTA = ${numeroUnico}
     `;
     let response = await this.dbExplorerClient.executeQuery(sql);
 
