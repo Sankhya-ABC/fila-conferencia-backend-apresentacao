@@ -49,27 +49,25 @@ export class SeparacaoService {
     quantidade,
     unidade,
   }: PostItemConferidoVolume) {
-    const existente = await this.verificarItemConferidoVolume({
-      numeroConferencia,
-      numeroVolume,
-      idProduto,
-      controle,
-    });
+    await this.garantirVolume({ numeroConferencia, numeroVolume });
 
-    if (existente) {
-      const resp = await this.atualizarItemConferidoVolume({
+    const { existe, qtdAtual, seqItem } =
+      await this.verificarItemConferidoVolume({
         numeroConferencia,
         numeroVolume,
-        seqItem: existente.SEQITEM,
-        quantidade: existente.QTD + quantidade,
+        idProduto,
+        controle,
+      });
+
+    if (existe) {
+      await this.atualizarItemConferidoVolume({
+        numeroConferencia,
+        numeroVolume,
+        seqItem: seqItem,
+        quantidade: qtdAtual + quantidade,
       });
     } else {
-      const seqItem = await this.obterProximoSeqItem({
-        numeroConferencia,
-        numeroVolume,
-      });
-
-      const resp = await this.inserirItemConferidoVolume({
+      await this.inserirItemConferidoVolume({
         numeroConferencia,
         numeroVolume,
         seqItem,
@@ -372,6 +370,30 @@ export class SeparacaoService {
       );
     }
   }
+  async garantirVolume({
+    numeroConferencia,
+    numeroVolume,
+  }: {
+    numeroConferencia: number;
+    numeroVolume: number;
+  }) {
+    const existe = await this.dbExplorerClient.executeQuery(`
+    SELECT 1
+    FROM TGFVCF
+    WHERE NUCONF = ${numeroConferencia}
+      AND SEQVOL = ${numeroVolume}
+  `);
+
+    if (existe.length === 0) {
+      await this.datasetSP.save({
+        entityName: 'VolumeConferencia',
+        fieldsAndValues: {
+          NUCONF: numeroConferencia,
+          SEQVOL: numeroVolume,
+        },
+      });
+    }
+  }
 
   async verificarItemConferidoVolume({
     numeroConferencia,
@@ -384,17 +406,35 @@ export class SeparacaoService {
     idProduto: number;
     controle: string;
   }) {
-    const sql = `
+    const resp = await this.dbExplorerClient.executeQuery(`
     SELECT SEQITEM, QTD
     FROM TGFIVC
     WHERE NUCONF = ${numeroConferencia}
       AND SEQVOL = ${numeroVolume}
       AND CODPROD = ${idProduto}
-      AND COALESCE(CONTROLE, ' ') = COALESCE('${controle}', ' ')
-  `;
+      AND COALESCE(CONTROLE, ' ') = '${controle ?? ' '}'
+  `);
 
-    const res = await this.dbExplorerClient.executeQuery(sql);
-    return res?.[0] ?? null;
+    if (resp.length > 0) {
+      return {
+        existe: true,
+        seqItem: resp[0].SEQITEM,
+        qtdAtual: resp[0].QTD,
+      };
+    }
+
+    const ultimo = await this.dbExplorerClient.executeQuery(`
+    SELECT COALESCE(MAX(SEQITEM), 0) AS ULTIMO
+    FROM TGFIVC
+    WHERE NUCONF = ${numeroConferencia}
+      AND SEQVOL = ${numeroVolume}
+  `);
+
+    return {
+      existe: false,
+      seqItem: ultimo[0].ULTIMO + 1,
+      qtdAtual: 0,
+    };
   }
 
   async obterProximoSeqItem({
