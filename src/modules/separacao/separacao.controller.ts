@@ -1,13 +1,13 @@
 import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
-import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthUserGuard } from 'src/auth-user/auth-user.guard';
-import { SeparacaoService } from './separacao.service';
 import {
-  IdAndControleProdutoFilter,
-  NumeroUnicoFilter,
   IniciarConferenciaBody,
   NumeroConferenciaFilter,
+  NumeroUnicoFilter,
+  PostItemConferidoVolume,
 } from './dto/separacao.dto';
+import { SeparacaoService } from './separacao.service';
 
 @UseGuards(AuthUserGuard)
 @ApiTags('Separacoes')
@@ -19,6 +19,15 @@ export class SeparacaoController {
   @ApiOperation({ summary: 'Iniciar Conferência de um Pedido' })
   postIniciarConferencia(@Body() body: IniciarConferenciaBody) {
     return this.service.postIniciarConferencia(body);
+  }
+
+  @Post('item-conferido-volume')
+  @ApiOperation({ summary: 'Iniciar Conferência de um Pedido' })
+  postItemConferidoVolume(
+    @Body()
+    body: PostItemConferidoVolume,
+  ) {
+    return this.service.postItemConferidoVolume(body);
   }
 
   @Get('dados-basicos')

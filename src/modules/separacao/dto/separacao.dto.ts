@@ -79,7 +79,7 @@ export class AtualizarCabecalhoNotaParams {
   numeroConferencia: number;
 }
 
-export class VerificarItemConferidoVolumeParams {
+export class PostItemConferidoVolume {
   @ApiProperty({ example: 1234 })
   @Type(() => Number)
   @IsNumber()
@@ -98,57 +98,19 @@ export class VerificarItemConferidoVolumeParams {
   @IsNotEmpty()
   idProduto: number;
 
+  @ApiProperty({ example: 'Rosa' })
+  @IsString()
+  @IsNotEmpty()
+  controle: string;
+
   @ApiProperty({ example: 1234 })
   @Type(() => Number)
   @IsNumber()
   @IsNotEmpty()
-  controle: number;
-}
-
-export class ObterProximoSeqItemParams {
-  @ApiProperty({ example: 1234 })
-  @Type(() => Number)
-  @IsNumber()
-  @IsEmpty()
-  numeroConferencia: number;
-
-  @ApiProperty({ example: 1234 })
-  @Type(() => Number)
-  @IsNumber()
-  @IsEmpty()
-  numeroVolume: number;
-}
-
-export class AtualizarItemConferidoVolumeParams extends ObterProximoSeqItemParams {
-  @ApiProperty({ example: 1234 })
-  @Type(() => Number)
-  @IsNumber()
-  @IsEmpty()
-  seqItem: number;
-
-  @ApiProperty({ example: 1234 })
-  @Type(() => Number)
-  @IsNumber()
-  @IsEmpty()
   quantidade: number;
-}
 
-export class InserirItemConferidoVolumeParams extends AtualizarItemConferidoVolumeParams {
-  @ApiProperty({ example: 1234 })
-  @Type(() => Number)
-  @IsNumber()
-  @IsEmpty()
-  idProduto: number;
-
-  @ApiProperty({ example: 1234 })
-  @Type(() => Number)
-  @IsNumber()
-  @IsEmpty()
-  controle: number;
-
-  @ApiProperty({ example: 1234 })
-  @Type(() => Number)
-  @IsNumber()
-  @IsEmpty()
-  unidade: number;
+  @ApiProperty({ example: 'UN' })
+  @IsString()
+  @IsNotEmpty()
+  unidade: string;
 }

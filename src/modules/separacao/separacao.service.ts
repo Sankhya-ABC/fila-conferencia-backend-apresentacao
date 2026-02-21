@@ -4,14 +4,11 @@ import { SankhyaDBExplorerSPClient } from 'src/http-client/db-explorer-sp/db-exp
 import {
   AtualizarCabecalhoConferenciaParams,
   AtualizarCabecalhoNotaParams,
-  AtualizarItemConferidoVolumeParams,
   IdAndControleProdutoFilter,
   IniciarConferenciaBody,
-  InserirItemConferidoVolumeParams,
   NumeroConferenciaFilter,
   NumeroUnicoFilter,
-  ObterProximoSeqItemParams,
-  VerificarItemConferidoVolumeParams,
+  PostItemConferidoVolume,
 } from './dto/separacao.dto';
 
 @Injectable()
@@ -51,7 +48,7 @@ export class SeparacaoService {
     controle,
     quantidade,
     unidade,
-  }: InserirItemConferidoVolumeParams) {
+  }: PostItemConferidoVolume) {
     const existente = await this.verificarItemConferidoVolume({
       numeroConferencia,
       numeroVolume,
@@ -60,7 +57,7 @@ export class SeparacaoService {
     });
 
     if (existente) {
-      await this.atualizarItemConferidoVolume({
+      const resp = await this.atualizarItemConferidoVolume({
         numeroConferencia,
         numeroVolume,
         seqItem: existente.SEQITEM,
@@ -72,7 +69,7 @@ export class SeparacaoService {
         numeroVolume,
       });
 
-      await this.inserirItemConferidoVolume({
+      const resp = await this.inserirItemConferidoVolume({
         numeroConferencia,
         numeroVolume,
         seqItem,
@@ -291,82 +288,6 @@ export class SeparacaoService {
     }
   }
 
-  async verificarItemConferidoVolume({
-    numeroConferencia,
-    numeroVolume,
-    idProduto,
-    controle,
-  }: VerificarItemConferidoVolumeParams) {
-    const sql = `
-    SELECT SEQITEM, QTD
-    FROM TGFIVC
-    WHERE NUCONF = ${numeroConferencia}
-      AND SEQVOL = ${numeroVolume}
-      AND CODPROD = ${idProduto}
-      AND NVL(CONTROLE, ' ') = NVL('${controle}', ' ')
-  `;
-
-    const res = await this.dbExplorerClient.executeQuery(sql);
-    return res?.[0] ?? null;
-  }
-
-  async obterProximoSeqItem({
-    numeroConferencia,
-    numeroVolume,
-  }: ObterProximoSeqItemParams) {
-    const sql = `
-    SELECT NVL(MAX(SEQITEM), 0) + 1 AS PROX_SEQITEM
-    FROM TGFIVC
-    WHERE NUCONF = ${numeroConferencia}
-      AND SEQVOL = ${numeroVolume}
-  `;
-
-    const res = await this.dbExplorerClient.executeQuery(sql);
-    return res[0].PROX_SEQITEM;
-  }
-
-  async atualizarItemConferidoVolume({
-    numeroConferencia,
-    numeroVolume,
-    seqItem,
-    quantidade,
-  }: AtualizarItemConferidoVolumeParams) {
-    await this.datasetSP.save({
-      entityName: 'ItemVolumeConferencia',
-      pk: {
-        NUCONF: numeroConferencia,
-        SEQVOL: numeroVolume,
-        SEQITEM: seqItem,
-      },
-      fieldsAndValues: {
-        QTD: quantidade,
-      },
-    });
-  }
-
-  async inserirItemConferidoVolume({
-    numeroConferencia,
-    numeroVolume,
-    seqItem,
-    idProduto,
-    controle,
-    quantidade,
-    unidade,
-  }: InserirItemConferidoVolumeParams) {
-    await this.datasetSP.save({
-      entityName: 'ItemVolumeConferencia',
-      fieldsAndValues: {
-        NUCONF: numeroConferencia,
-        SEQVOL: numeroVolume,
-        SEQITEM: seqItem,
-        CODPROD: idProduto,
-        CONTROLE: controle,
-        QTD: quantidade,
-        CODVOL: unidade,
-      },
-    });
-  }
-
   async obterNumeroConferencia() {
     try {
       const res = await this.dbExplorerClient.executeQuery(`
@@ -450,5 +371,103 @@ export class SeparacaoService {
         'Erro ao vincular conferência ao cabeçalho da nota.',
       );
     }
+  }
+
+  async verificarItemConferidoVolume({
+    numeroConferencia,
+    numeroVolume,
+    idProduto,
+    controle,
+  }: {
+    numeroConferencia: number;
+    numeroVolume: number;
+    idProduto: number;
+    controle: string;
+  }) {
+    const sql = `
+    SELECT SEQITEM, QTD
+    FROM TGFIVC
+    WHERE NUCONF = ${numeroConferencia}
+      AND SEQVOL = ${numeroVolume}
+      AND CODPROD = ${idProduto}
+      AND COALESCE(CONTROLE, ' ') = COALESCE('${controle}', ' ')
+  `;
+
+    const res = await this.dbExplorerClient.executeQuery(sql);
+    return res?.[0] ?? null;
+  }
+
+  async obterProximoSeqItem({
+    numeroConferencia,
+    numeroVolume,
+  }: {
+    numeroConferencia: number;
+    numeroVolume: number;
+  }) {
+    const sql = `
+    SELECT COALESCE(MAX(SEQITEM), 0) + 1 AS PROX_SEQITEM
+    FROM TGFIVC
+    WHERE NUCONF = ${numeroConferencia}
+      AND SEQVOL = ${numeroVolume}
+  `;
+
+    const res = await this.dbExplorerClient.executeQuery(sql);
+
+    return res?.[0]?.PROX_SEQITEM;
+  }
+
+  async atualizarItemConferidoVolume({
+    numeroConferencia,
+    numeroVolume,
+    seqItem,
+    quantidade,
+  }: {
+    numeroConferencia: number;
+    numeroVolume: number;
+    seqItem: number;
+    quantidade: number;
+  }) {
+    await this.datasetSP.save({
+      entityName: 'ItemVolumeConferencia',
+      pk: {
+        NUCONF: numeroConferencia,
+        SEQVOL: numeroVolume,
+        SEQITEM: seqItem,
+      },
+      fieldsAndValues: {
+        QTD: quantidade,
+      },
+    });
+  }
+
+  async inserirItemConferidoVolume({
+    numeroConferencia,
+    numeroVolume,
+    seqItem,
+    idProduto,
+    controle,
+    quantidade,
+    unidade,
+  }: {
+    numeroConferencia: number;
+    numeroVolume: number;
+    seqItem: number;
+    idProduto: number;
+    controle: string;
+    quantidade: number;
+    unidade: string;
+  }) {
+    return await this.datasetSP.save({
+      entityName: 'ItemVolumeConferencia',
+      fieldsAndValues: {
+        NUCONF: numeroConferencia,
+        SEQVOL: numeroVolume,
+        SEQITEM: seqItem,
+        CODPROD: idProduto,
+        CONTROLE: controle,
+        QTD: quantidade,
+        CODVOL: unidade,
+      },
+    });
   }
 }
