@@ -9,6 +9,7 @@ import {
   IniciarConferenciaBody,
   NumeroConferenciaFilter,
   NumeroUnicoFilter,
+  PostAtualizarDimensoesVolumeParams,
   PostItemConferidoVolume,
 } from './dto/separacao.dto';
 
@@ -204,6 +205,58 @@ export class SeparacaoService {
     });
   }
 
+  async postAtualizarDimensoesVolume({
+    numeroConferencia,
+    numeroVolume,
+    largura,
+    comprimento,
+    altura,
+    peso,
+  }: PostAtualizarDimensoesVolumeParams) {
+    const existente = await this.dbExplorerClient.executeQuery(`
+    SELECT NUCUBAGEM
+    FROM AD_CUBAGEM
+    WHERE NUCONF = ${numeroConferencia}
+      AND SEQVOL = ${numeroVolume}
+  `);
+
+    if (existente.length > 0) {
+      await this.datasetSP.save({
+        entityName: 'AD_CUBAGEM',
+        pk: {
+          NUCUBAGEM: existente[0].NUCUBAGEM,
+        },
+        fieldsAndValues: {
+          ALTURA: altura,
+          LARGURA: largura,
+          COMPRIMENTO: comprimento,
+          PESO: peso,
+        },
+      });
+
+      return;
+    }
+    const prox = await this.dbExplorerClient.executeQuery(`
+    SELECT COALESCE(MAX(NUCUBAGEM), 0) + 1 AS PROX
+    FROM AD_CUBAGEM
+  `);
+
+    const nucubagem = prox[0].PROX;
+
+    await this.datasetSP.save({
+      entityName: 'AD_CUBAGEM',
+      fieldsAndValues: {
+        NUCUBAGEM: nucubagem,
+        NUCONF: numeroConferencia,
+        SEQVOL: numeroVolume,
+        ALTURA: altura,
+        LARGURA: largura,
+        COMPRIMENTO: comprimento,
+        PESO: peso,
+      },
+    });
+  }
+
   // gets
   async getDadosBasicos({ numeroUnico }: NumeroUnicoFilter) {
     const sql = `
@@ -307,17 +360,27 @@ export class SeparacaoService {
   async getVolumes({ numeroConferencia }: NumeroConferenciaFilter) {
     const sql = `
     SELECT 
-      IVC.SEQVOL AS numeroVolume, 
-      IVC.CODPROD AS idProduto, 
-      PRO.DESCRPROD AS descricaoProduto, 
-      IVC.QTD AS quantidade, 
-      IVC.CODVOL AS unidade, 
-      IVC.CONTROLE AS controle
+    IVC.SEQVOL AS numeroVolume,
+    IVC.CODPROD AS idProduto,
+    PRO.DESCRPROD AS descricaoProduto,
+    IVC.QTD AS quantidade,
+    IVC.CODVOL AS unidade,
+    IVC.CONTROLE AS controle,
+
+    CUB.ALTURA AS altura,
+    CUB.LARGURA AS largura,
+    CUB.COMPRIMENTO AS comprimento,
+    CUB.PESO AS peso
 
     FROM TGFIVC IVC
 
-    JOIN TGFPRO PRO 
-    ON PRO.CODPROD = IVC.CODPROD 
+    JOIN TGFPRO PRO
+      ON PRO.CODPROD = IVC.CODPROD
+
+    LEFT JOIN AD_CUBAGEM CUB
+      ON CUB.NUCONF = IVC.NUCONF
+    AND CUB.SEQVOL = IVC.SEQVOL
+
     WHERE IVC.NUCONF = ${numeroConferencia}
       AND IVC.QTD > 0
     ORDER BY IVC.SEQVOL, IVC.SEQITEM
@@ -338,16 +401,20 @@ export class SeparacaoService {
     const volumeMap = new Map<number, any>();
 
     for (const item of response) {
-      const { numeroVolume } = item;
-
-      if (!volumeMap.has(numeroVolume)) {
-        volumeMap.set(numeroVolume, {
-          numeroVolume,
+      if (!volumeMap.has(item.numeroVolume)) {
+        volumeMap.set(item.numeroVolume, {
+          numeroVolume: item.numeroVolume,
+          cubagem: {
+            altura: item.altura ?? null,
+            largura: item.largura ?? null,
+            comprimento: item.comprimento ?? null,
+            peso: item.peso ?? null,
+          },
           itens: [],
         });
       }
 
-      volumeMap.get(numeroVolume).itens.push({
+      volumeMap.get(item.numeroVolume).itens.push({
         idProduto: item.idProduto,
         descricaoProduto: item.descricaoProduto,
         imagem: item.imagem,

@@ -5,6 +5,7 @@ import {
   IniciarConferenciaBody,
   NumeroConferenciaFilter,
   NumeroUnicoFilter,
+  PostAtualizarDimensoesVolumeParams,
   PostDevolverItemConferido,
   PostItemConferidoVolume,
   PostRemoverVolumeParams,
@@ -44,6 +45,13 @@ export class SeparacaoController {
   @Post('devolver-item-conferido')
   postDevolverItemConferido(@Body() body: PostDevolverItemConferido) {
     return this.service.postDevolverItemConferido(body);
+  }
+
+  @Post('dimensoes-volume')
+  postAtualizarDimensoesVolume(
+    @Body() body: PostAtualizarDimensoesVolumeParams,
+  ) {
+    return this.service.postAtualizarDimensoesVolume(body);
   }
 
   @Get('dados-basicos')

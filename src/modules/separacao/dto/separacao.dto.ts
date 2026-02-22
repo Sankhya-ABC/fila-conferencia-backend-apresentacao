@@ -160,6 +160,44 @@ export class PostDevolverItemConferido {
   controle: string;
 }
 
+export class PostAtualizarDimensoesVolumeParams {
+  @ApiProperty({ example: 1234 })
+  @Type(() => Number)
+  @IsNumber()
+  @IsNotEmpty()
+  numeroConferencia: number;
+
+  @ApiProperty({ example: 1234 })
+  @Type(() => Number)
+  @IsNumber()
+  @IsNotEmpty()
+  numeroVolume: number;
+
+  @ApiProperty({ example: 1234 })
+  @Type(() => Number)
+  @IsNumber()
+  @IsOptional()
+  largura?: number;
+
+  @ApiProperty({ example: 1234 })
+  @Type(() => Number)
+  @IsNumber()
+  @IsOptional()
+  comprimento?: number;
+
+  @ApiProperty({ example: 1234 })
+  @Type(() => Number)
+  @IsNumber()
+  @IsOptional()
+  altura?: number;
+
+  @ApiProperty({ example: 1234 })
+  @Type(() => Number)
+  @IsNumber()
+  @IsOptional()
+  peso?: number;
+}
+
 export type CacheItem = {
   value: string | null;
   expiresAt: number;
