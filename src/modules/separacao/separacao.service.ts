@@ -140,20 +140,20 @@ export class SeparacaoService {
 
     response = await Promise.all(
       response?.map(async (data) => {
-        const { idProduto, controle, imagem } = data;
-        let imagemBase64: string | null = null;
-        if (imagem) {
-          imagemBase64 = Buffer.from(imagem, 'hex').toString('base64');
-        }
+        const { idProduto, controle } = data;
 
-        let codigoBarras = await this.getCodigosDeBarra({
+        let imagem = await this.obterImagemProduto(idProduto);
+
+        let codigoBarras = await this.obterCodigosDeBarra({
           idProduto,
           controle,
         });
+
         codigoBarras = codigoBarras?.map((codigoBarra) =>
           codigoBarra.CODIGO?.trim(),
         );
-        return { ...data, codigoBarras, imagem: imagemBase64 };
+
+        return { ...data, codigoBarras, imagem };
       }),
     );
 
@@ -182,33 +182,33 @@ export class SeparacaoService {
       IVC.SEQVOL AS numeroVolume, 
       IVC.CODPROD AS idProduto, 
       PRO.DESCRPROD AS descricaoProduto, 
-      PRO.IMAGEM AS imagem, 
       IVC.QTD AS quantidade, 
-      IVC.CODVOL AS unidade 
+      IVC.CODVOL AS unidade, 
+      IVC.CONTROLE AS controle 
+
     FROM TGFIVC IVC 
+    
     JOIN TGFPRO PRO 
       ON PRO.CODPROD = IVC.CODPROD 
     WHERE IVC.NUCONF = ${numeroConferencia} 
-    ORDER BY IVC.SEQVOL, IVC.SEQITEM; 
+    ORDER BY IVC.SEQVOL, IVC.SEQITEM 
   `;
 
-    const response = await this.dbExplorerClient.executeQuery(sql);
+    let response = await this.dbExplorerClient.executeQuery(sql);
 
-    const rows = await Promise.all(
+    response = await Promise.all(
       response?.map(async (data) => {
-        const { imagem } = data;
-        let imagemBase64: string | null = null;
-        if (imagem) {
-          imagemBase64 = Buffer.from(imagem, 'hex').toString('base64');
-        }
+        const { idProduto } = data;
 
-        return { ...data, imagem: imagemBase64 };
+        let imagem = await this.obterImagemProduto(idProduto);
+
+        return { ...data, imagem };
       }),
     );
 
     const volumeMap = new Map<number, any>();
 
-    for (const item of rows) {
+    for (const item of response) {
       const { numeroVolume } = item;
 
       if (!volumeMap.has(numeroVolume)) {
@@ -224,6 +224,7 @@ export class SeparacaoService {
         imagem: item.imagem,
         quantidade: item.quantidade,
         unidade: item.unidade,
+        controle: item.controle ?? '',
       });
     }
 
@@ -233,7 +234,10 @@ export class SeparacaoService {
   }
 
   // auxiliares
-  async getCodigosDeBarra({ idProduto, controle }: IdAndControleProdutoFilter) {
+  async obterCodigosDeBarra({
+    idProduto,
+    controle,
+  }: IdAndControleProdutoFilter) {
     const sql = `
     SELECT 
     DISTINCT 
@@ -245,6 +249,24 @@ export class SeparacaoService {
     `;
     const response = await this.dbExplorerClient.executeQuery(sql);
     return response;
+  }
+
+  async obterImagemProduto(idProduto: number) {
+    try {
+      const sql = `
+      SELECT IMAGEM
+      FROM TGFPRO
+      WHERE CODPROD = ${idProduto};
+      `;
+      const response = await this.dbExplorerClient.executeQuery(sql);
+      let imagem = response?.[0]?.IMAGEM || null;
+      if (imagem) {
+        imagem = Buffer.from(imagem, 'hex').toString('base64');
+      }
+      return imagem;
+    } catch {
+      return null;
+    }
   }
 
   async verificarStatus({ numeroUnico }: NumeroUnicoFilter) {
