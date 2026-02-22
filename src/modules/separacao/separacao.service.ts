@@ -10,7 +10,6 @@ import {
   NumeroConferenciaFilter,
   NumeroUnicoFilter,
   PostItemConferidoVolume,
-  PostRemoverVolumeParams,
 } from './dto/separacao.dto';
 
 @Injectable()
@@ -178,28 +177,30 @@ export class SeparacaoService {
   async getItensPedido({ numeroUnico }: NumeroUnicoFilter) {
     const sql = `
     SELECT 
-    ITE.CODPROD AS idProduto, 
-    PRO.DESCRPROD AS nomeProduto, 
+      ITE.CODPROD AS idProduto,
+      PRO.DESCRPROD AS nomeProduto,
 
-    ITE.QTDNEG AS quantidade, 
-    ITE.CODVOL AS unidade, 
+      ITE.QTDNEG AS quantidade, 
+      ITE.CODVOL AS unidade,
 
-    PRO.CODMARCA AS idMarca, 
-    PRO.MARCA AS nomeMarca, 
+      PRO.CODMARCA AS idMarca,
+      PRO.MARCA AS nomeMarca,
 
-    PAR.CODPARC AS idFornecedor, 
-    PAR.NOMEPARC AS nomeFornecedor, 
+      PAR.CODPARC AS idFornecedor,
+      PAR.NOMEPARC AS nomeFornecedor,
 
-    ITE.CONTROLE AS controle, 
-    PRO.COMPLDESC AS complemento 
+      ITE.CONTROLE AS controle,
+      PRO.COMPLDESC AS complemento
 
-    FROM TGFITE ITE 
+    FROM TGFITE ITE
 
-    LEFT JOIN TGFPRO PRO ON PRO.CODPROD = ITE.CODPROD 
-    LEFT JOIN TGFPAR PAR ON PAR.CODPARC = PRO.CODPARCFORN 
+    LEFT JOIN TGFPRO PRO ON PRO.CODPROD = ITE.CODPROD
+    LEFT JOIN TGFPAR PAR ON PAR.CODPARC = PRO.CODPARCFORN
 
     WHERE ITE.NUNOTA = ${numeroUnico}
-    `;
+      AND (ITE.QTDNEG - COALESCE(ITE.QTDCONFERIDA, 0)) > 0
+  `;
+
     let response = await this.dbExplorerClient.executeQuery(sql);
 
     response = await Promise.all(
@@ -234,8 +235,9 @@ export class SeparacaoService {
     FROM TGFIVC
 
     WHERE NUCONF = ${numeroConferencia}
+      AND QTD > 0
     GROUP BY CODPROD, CONTROLE
-    `;
+  `;
     const response = await this.dbExplorerClient.executeQuery(sql);
     return response;
   }
@@ -248,14 +250,15 @@ export class SeparacaoService {
       PRO.DESCRPROD AS descricaoProduto, 
       IVC.QTD AS quantidade, 
       IVC.CODVOL AS unidade, 
-      IVC.CONTROLE AS controle 
+      IVC.CONTROLE AS controle
 
-    FROM TGFIVC IVC 
+    FROM TGFIVC IVC
 
     JOIN TGFPRO PRO 
-      ON PRO.CODPROD = IVC.CODPROD 
-    WHERE IVC.NUCONF = ${numeroConferencia} 
-    ORDER BY IVC.SEQVOL, IVC.SEQITEM 
+    ON PRO.CODPROD = IVC.CODPROD 
+    WHERE IVC.NUCONF = ${numeroConferencia}
+      AND IVC.QTD > 0
+    ORDER BY IVC.SEQVOL, IVC.SEQITEM
   `;
 
     let response = await this.dbExplorerClient.executeQuery(sql);
