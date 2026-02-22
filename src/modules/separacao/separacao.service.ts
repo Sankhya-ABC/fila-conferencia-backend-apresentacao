@@ -404,12 +404,10 @@ export class SeparacaoService {
       if (!volumeMap.has(item.numeroVolume)) {
         volumeMap.set(item.numeroVolume, {
           numeroVolume: item.numeroVolume,
-          cubagem: {
-            altura: item.altura ?? null,
-            largura: item.largura ?? null,
-            comprimento: item.comprimento ?? null,
-            peso: item.peso ?? null,
-          },
+          altura: item.altura ?? null,
+          largura: item.largura ?? null,
+          comprimento: item.comprimento ?? null,
+          peso: item.peso ?? null,
           itens: [],
         });
       }
