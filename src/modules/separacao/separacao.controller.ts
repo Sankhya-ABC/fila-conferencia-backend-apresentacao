@@ -5,6 +5,7 @@ import {
   IniciarConferenciaBody,
   NumeroConferenciaFilter,
   NumeroUnicoFilter,
+  PostDevolverItemConferido,
   PostItemConferidoVolume,
   PostRemoverVolumeParams,
 } from './dto/separacao.dto';
@@ -38,6 +39,11 @@ export class SeparacaoController {
     body: PostRemoverVolumeParams,
   ) {
     return this.service.postRemoverVolume(body);
+  }
+
+  @Post('devolver-item-conferido')
+  postDevolverItemConferido(@Body() body: PostDevolverItemConferido) {
+    return this.service.postDevolverItemConferido(body);
   }
 
   @Get('dados-basicos')

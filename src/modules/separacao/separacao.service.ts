@@ -142,6 +142,68 @@ export class SeparacaoService {
     }
   }
 
+  async postDevolverItemConferido({
+    numeroConferencia,
+    numeroUnico,
+    idProduto,
+    controle,
+  }: {
+    numeroConferencia: number;
+    numeroUnico: number;
+    idProduto: number;
+    controle: string;
+  }) {
+    const controleNormalizado = controle?.trim() || ' ';
+
+    const itensVolumes = await this.dbExplorerClient.executeQuery(`
+    SELECT SEQVOL, SEQITEM
+    FROM TGFIVC
+    WHERE NUCONF = ${numeroConferencia}
+      AND CODPROD = ${idProduto}
+      AND COALESCE(CONTROLE, ' ') = '${controleNormalizado}'
+      AND QTD > 0
+  `);
+
+    if (!itensVolumes.length) return;
+
+    for (const item of itensVolumes) {
+      await this.datasetSP.save({
+        entityName: 'ItemVolumeConferencia',
+        pk: {
+          NUCONF: numeroConferencia,
+          SEQVOL: item.SEQVOL,
+          SEQITEM: item.SEQITEM,
+        },
+        fieldsAndValues: {
+          QTD: 0,
+        },
+      });
+    }
+
+    const restante = await this.dbExplorerClient.executeQuery(`
+    SELECT SUM(QTD) AS TOTAL
+    FROM TGFIVC
+    WHERE NUCONF = ${numeroConferencia}
+      AND CODPROD = ${idProduto}
+      AND COALESCE(CONTROLE, ' ') = '${controleNormalizado}'
+      AND QTD > 0
+  `);
+
+    const novoTotal = Number(restante?.[0]?.TOTAL || 0);
+
+    await this.datasetSP.save({
+      entityName: 'ItemNota',
+      pk: {
+        NUNOTA: numeroUnico,
+        CODPROD: idProduto,
+        CONTROLE: controleNormalizado,
+      },
+      fieldsAndValues: {
+        QTDCONFERIDA: novoTotal,
+      },
+    });
+  }
+
   // gets
   async getDadosBasicos({ numeroUnico }: NumeroUnicoFilter) {
     const sql = `

@@ -135,6 +135,31 @@ export class PostItemConferidoVolume {
   unidade: string;
 }
 
+export class PostDevolverItemConferido {
+  @ApiProperty({ example: 1234 })
+  @Type(() => Number)
+  @IsNumber()
+  @IsNotEmpty()
+  numeroConferencia: number;
+
+  @ApiProperty({ example: 1234 })
+  @Type(() => Number)
+  @IsNumber()
+  @IsNotEmpty()
+  numeroUnico: number;
+
+  @ApiProperty({ example: 1234 })
+  @Type(() => Number)
+  @IsNumber()
+  @IsNotEmpty()
+  idProduto: number;
+
+  @ApiProperty({ example: 'Rosa' })
+  @IsString()
+  @IsNotEmpty()
+  controle: string;
+}
+
 export type CacheItem = {
   value: string | null;
   expiresAt: number;
