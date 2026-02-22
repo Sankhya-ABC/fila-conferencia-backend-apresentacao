@@ -10,6 +10,7 @@ import {
   NumeroConferenciaFilter,
   NumeroUnicoFilter,
   PostItemConferidoVolume,
+  RemoverVolumeParams,
 } from './dto/separacao.dto';
 
 @Injectable()
@@ -20,6 +21,73 @@ export class SeparacaoService {
   ) {}
 
   private imagemCache = new Map<number, CacheItem>();
+
+  // delete
+  async removerVolume({
+    numeroConferencia,
+    numeroVolume,
+    numeroUnico,
+  }: RemoverVolumeParams) {
+    const itensVolume = await this.dbExplorerClient.executeQuery(`
+    SELECT SEQITEM, CODPROD, CONTROLE, QTD
+    FROM TGFIVC
+    WHERE NUCONF = ${numeroConferencia}
+      AND SEQVOL = ${numeroVolume}
+  `);
+
+    if (!itensVolume.length) return;
+
+    for (const item of itensVolume) {
+      const controle = item.CONTROLE ?? ' ';
+
+      const restante = await this.dbExplorerClient.executeQuery(`
+      SELECT SUM(QTD) AS TOTAL
+      FROM TGFIVC
+      WHERE NUCONF = ${numeroConferencia}
+        AND CODPROD = ${item.CODPROD}
+        AND COALESCE(CONTROLE,' ') = '${controle}'
+        AND SEQVOL <> ${numeroVolume}
+    `);
+
+      const novoTotal = Number(restante?.[0]?.TOTAL || 0);
+
+      await this.datasetSP.save({
+        entityName: 'ItemNota',
+        pk: {
+          NUNOTA: numeroUnico,
+          CODPROD: item.CODPROD,
+          CONTROLE: controle,
+        },
+        fieldsAndValues: {
+          QTDCONFERIDA: novoTotal,
+        },
+      });
+
+      await this.datasetSP.save({
+        entityName: 'ItemVolumeConferencia',
+        pk: {
+          NUCONF: numeroConferencia,
+          SEQVOL: numeroVolume,
+          SEQITEM: item.SEQITEM,
+        },
+        fieldsAndValues: {
+          NUCONF: null,
+          SEQVOL: null,
+        },
+      });
+    }
+
+    await this.datasetSP.save({
+      entityName: 'VolumeConferencia',
+      pk: {
+        NUCONF: numeroConferencia,
+        SEQVOL: numeroVolume,
+      },
+      fieldsAndValues: {
+        NUCONF: null,
+      },
+    });
+  }
 
   // posts
   async postIniciarConferencia({
@@ -80,17 +148,6 @@ export class SeparacaoService {
         unidade,
       });
     }
-
-    await this.atualizarQtdConferidaItemPedido({
-      numeroUnico: await this.obterNumeroUnicoDaConferencia(numeroConferencia),
-      idProduto,
-      controle,
-      quantidade: await this.calcularQtdTotalConferida({
-        numeroConferencia,
-        idProduto,
-        controle,
-      }),
-    });
   }
 
   // gets
@@ -522,97 +579,6 @@ export class SeparacaoService {
         QTD: quantidade,
       },
     });
-  }
-
-  async atualizarQtdConferidaItemPedido({
-    numeroUnico,
-    idProduto,
-    controle,
-    quantidade,
-  }: {
-    numeroUnico: number;
-    idProduto: number;
-    controle: string;
-    quantidade: number;
-  }) {
-    const unidade = await this.obterUnidadeItemPedido({
-      numeroUnico,
-      idProduto,
-      controle,
-    });
-
-    if (!unidade) {
-      throw new Error(
-        `Unidade (CODVOL) não encontrada para o produto ${idProduto}`,
-      );
-    }
-
-    const resp = await this.datasetSP.save({
-      entityName: 'ItemNota',
-      pk: {
-        NUNOTA: numeroUnico,
-        CODPROD: idProduto,
-        CONTROLE: controle || ' ',
-      },
-      fieldsAndValues: {
-        QTDCONFERIDA: quantidade,
-        CODVOL: unidade,
-      },
-    });
-
-    return resp;
-  }
-
-  async obterUnidadeItemPedido({
-    numeroUnico,
-    idProduto,
-    controle,
-  }: {
-    numeroUnico: number;
-    idProduto: number;
-    controle: string;
-  }): Promise<string> {
-    const res = await this.dbExplorerClient.executeQuery(`
-    SELECT CODVOL
-    FROM TGFITE
-    WHERE NUNOTA = ${numeroUnico}
-      AND CODPROD = ${idProduto}
-      AND COALESCE(CONTROLE, ' ') = '${controle || ' '}'
-  `);
-
-    return res?.[0]?.CODVOL;
-  }
-
-  async obterNumeroUnicoDaConferencia(
-    numeroConferencia: number,
-  ): Promise<number> {
-    const res = await this.dbExplorerClient.executeQuery(`
-    SELECT NUNOTAORIG
-    FROM TGFCON2
-    WHERE NUCONF = ${numeroConferencia}
-  `);
-
-    return res?.[0]?.NUNOTAORIG;
-  }
-
-  async calcularQtdTotalConferida({
-    numeroConferencia,
-    idProduto,
-    controle,
-  }: {
-    numeroConferencia: number;
-    idProduto: number;
-    controle: string;
-  }): Promise<number> {
-    const res = await this.dbExplorerClient.executeQuery(`
-    SELECT SUM(QTD) AS TOTAL
-    FROM TGFIVC
-    WHERE NUCONF = ${numeroConferencia}
-      AND CODPROD = ${idProduto}
-      AND COALESCE(CONTROLE, ' ') = '${controle || ' '}'
-  `);
-
-    return Number(res?.[0]?.TOTAL || 0);
   }
 
   async inserirItemConferidoVolume({
