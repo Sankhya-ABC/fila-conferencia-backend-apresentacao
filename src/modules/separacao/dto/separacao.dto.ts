@@ -114,3 +114,8 @@ export class PostItemConferidoVolume {
   @IsNotEmpty()
   unidade: string;
 }
+
+export type CacheItem = {
+  value: string | null;
+  expiresAt: number;
+};

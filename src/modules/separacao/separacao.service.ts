@@ -4,6 +4,7 @@ import { SankhyaDBExplorerSPClient } from 'src/http-client/db-explorer-sp/db-exp
 import {
   AtualizarCabecalhoConferenciaParams,
   AtualizarCabecalhoNotaParams,
+  CacheItem,
   IdAndControleProdutoFilter,
   IniciarConferenciaBody,
   NumeroConferenciaFilter,
@@ -17,6 +18,8 @@ export class SeparacaoService {
     private readonly dbExplorerClient: SankhyaDBExplorerSPClient,
     private readonly datasetSP: SankhyaDatasetSPClient,
   ) {}
+
+  private imagemCache = new Map<number, CacheItem>();
 
   // posts
   async postIniciarConferencia({
@@ -187,7 +190,7 @@ export class SeparacaoService {
       IVC.CONTROLE AS controle 
 
     FROM TGFIVC IVC 
-    
+
     JOIN TGFPRO PRO 
       ON PRO.CODPROD = IVC.CODPROD 
     WHERE IVC.NUCONF = ${numeroConferencia} 
@@ -252,21 +255,31 @@ export class SeparacaoService {
   }
 
   async obterImagemProduto(idProduto: number) {
-    try {
-      const sql = `
-      SELECT IMAGEM
-      FROM TGFPRO
-      WHERE CODPROD = ${idProduto};
-      `;
-      const response = await this.dbExplorerClient.executeQuery(sql);
-      let imagem = response?.[0]?.IMAGEM || null;
-      if (imagem) {
-        imagem = Buffer.from(imagem, 'hex').toString('base64');
-      }
-      return imagem;
-    } catch {
-      return null;
+    const cache = this.imagemCache.get(idProduto);
+
+    if (cache && cache.expiresAt > Date.now()) {
+      return cache.value;
     }
+
+    const response = await this.dbExplorerClient.executeQuery(`
+    SELECT IMAGEM
+    FROM TGFPRO
+    WHERE CODPROD = ${idProduto};
+  `);
+
+    let imagem = response?.[0]?.IMAGEM || null;
+
+    if (imagem) {
+      imagem = Buffer.from(imagem, 'hex').toString('base64');
+    }
+
+    const MINUTOS = 60 * 3;
+    this.imagemCache.set(idProduto, {
+      value: imagem,
+      expiresAt: Date.now() + 1000 * 60 * MINUTOS,
+    });
+
+    return imagem;
   }
 
   async verificarStatus({ numeroUnico }: NumeroUnicoFilter) {
