@@ -45,7 +45,7 @@ export class IniciarConferenciaBody {
   numeroUnico: number;
 }
 
-export class RemoverVolumeParams {
+export class PostRemoverVolumeParams {
   @ApiProperty({ example: 1234 })
   @Type(() => Number)
   @IsNumber()

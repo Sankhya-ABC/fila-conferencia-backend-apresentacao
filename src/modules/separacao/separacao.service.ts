@@ -10,7 +10,7 @@ import {
   NumeroConferenciaFilter,
   NumeroUnicoFilter,
   PostItemConferidoVolume,
-  RemoverVolumeParams,
+  PostRemoverVolumeParams,
 } from './dto/separacao.dto';
 
 @Injectable()
@@ -21,73 +21,6 @@ export class SeparacaoService {
   ) {}
 
   private imagemCache = new Map<number, CacheItem>();
-
-  // delete
-  async removerVolume({
-    numeroConferencia,
-    numeroVolume,
-    numeroUnico,
-  }: RemoverVolumeParams) {
-    const itensVolume = await this.dbExplorerClient.executeQuery(`
-    SELECT SEQITEM, CODPROD, CONTROLE, QTD
-    FROM TGFIVC
-    WHERE NUCONF = ${numeroConferencia}
-      AND SEQVOL = ${numeroVolume}
-  `);
-
-    if (!itensVolume.length) return;
-
-    for (const item of itensVolume) {
-      const controle = item.CONTROLE ?? ' ';
-
-      const restante = await this.dbExplorerClient.executeQuery(`
-      SELECT SUM(QTD) AS TOTAL
-      FROM TGFIVC
-      WHERE NUCONF = ${numeroConferencia}
-        AND CODPROD = ${item.CODPROD}
-        AND COALESCE(CONTROLE,' ') = '${controle}'
-        AND SEQVOL <> ${numeroVolume}
-    `);
-
-      const novoTotal = Number(restante?.[0]?.TOTAL || 0);
-
-      await this.datasetSP.save({
-        entityName: 'ItemNota',
-        pk: {
-          NUNOTA: numeroUnico,
-          CODPROD: item.CODPROD,
-          CONTROLE: controle,
-        },
-        fieldsAndValues: {
-          QTDCONFERIDA: novoTotal,
-        },
-      });
-
-      await this.datasetSP.save({
-        entityName: 'ItemVolumeConferencia',
-        pk: {
-          NUCONF: numeroConferencia,
-          SEQVOL: numeroVolume,
-          SEQITEM: item.SEQITEM,
-        },
-        fieldsAndValues: {
-          NUCONF: null,
-          SEQVOL: null,
-        },
-      });
-    }
-
-    await this.datasetSP.save({
-      entityName: 'VolumeConferencia',
-      pk: {
-        NUCONF: numeroConferencia,
-        SEQVOL: numeroVolume,
-      },
-      fieldsAndValues: {
-        NUCONF: null,
-      },
-    });
-  }
 
   // posts
   async postIniciarConferencia({
@@ -146,6 +79,66 @@ export class SeparacaoService {
         controle,
         quantidade,
         unidade,
+      });
+    }
+  }
+
+  async postRemoverVolume({
+    numeroConferencia,
+    numeroVolume,
+    numeroUnico,
+  }: {
+    numeroConferencia: number;
+    numeroVolume: number;
+    numeroUnico: number;
+  }) {
+    const itensVolume = await this.dbExplorerClient.executeQuery(`
+    SELECT SEQITEM, CODPROD, CONTROLE, QTD
+    FROM TGFIVC
+    WHERE NUCONF = ${numeroConferencia}
+      AND SEQVOL = ${numeroVolume}
+  `);
+
+    if (!itensVolume?.length) {
+      return;
+    }
+
+    for (const item of itensVolume) {
+      const controle = (item.CONTROLE ?? ' ').trim() || ' ';
+
+      const restante = await this.dbExplorerClient.executeQuery(`
+      SELECT SUM(QTD) AS TOTAL
+      FROM TGFIVC
+      WHERE NUCONF = ${numeroConferencia}
+        AND CODPROD = ${item.CODPROD}
+        AND COALESCE(CONTROLE, ' ') = '${controle}'
+        AND SEQVOL <> ${numeroVolume}
+    `);
+
+      const novoTotal = Number(restante?.[0]?.TOTAL || 0);
+
+      await this.datasetSP.save({
+        entityName: 'ItemNota',
+        pk: {
+          NUNOTA: numeroUnico,
+          CODPROD: item.CODPROD,
+          CONTROLE: controle,
+        },
+        fieldsAndValues: {
+          QTDCONFERIDA: novoTotal,
+        },
+      });
+
+      await this.datasetSP.save({
+        entityName: 'ItemVolumeConferencia',
+        pk: {
+          NUCONF: numeroConferencia,
+          SEQVOL: numeroVolume,
+          SEQITEM: item.SEQITEM,
+        },
+        fieldsAndValues: {
+          QTD: 0,
+        },
       });
     }
   }

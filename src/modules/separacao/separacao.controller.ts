@@ -6,6 +6,7 @@ import {
   NumeroConferenciaFilter,
   NumeroUnicoFilter,
   PostItemConferidoVolume,
+  PostRemoverVolumeParams,
 } from './dto/separacao.dto';
 import { SeparacaoService } from './separacao.service';
 
@@ -28,6 +29,15 @@ export class SeparacaoController {
     body: PostItemConferidoVolume,
   ) {
     return this.service.postItemConferidoVolume(body);
+  }
+
+  @Post('remover-volume')
+  @ApiOperation({ summary: 'Remover Volume' })
+  postRemoverVolume(
+    @Body()
+    body: PostRemoverVolumeParams,
+  ) {
+    return this.service.postRemoverVolume(body);
   }
 
   @Get('dados-basicos')
