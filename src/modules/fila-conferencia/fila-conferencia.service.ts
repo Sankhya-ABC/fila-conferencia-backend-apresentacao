@@ -7,6 +7,68 @@ export class FilaConferenciaService {
   constructor(private readonly dbExplorerClient: SankhyaDBExplorerSPClient) {}
 
   async getFilaConferencias(queryParams: FilaConferenciaFilter) {
+    const conditions: string[] = [];
+
+    if (queryParams.codigoStatus) {
+      const statusList = queryParams.codigoStatus
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+      if (statusList.length) {
+        conditions.push(`
+      sankhya.SNK_GET_SATUSCONFERENCIA(CAB.NUNOTA)
+      IN (${statusList.map((s) => `'${s}'`).join(',')})
+    `);
+      }
+    }
+
+    if (queryParams.numeroNota) {
+      conditions.push(`CAB.NUMNOTA = ${queryParams.numeroNota}`);
+    }
+
+    if (queryParams.numeroModial) {
+      conditions.push(`CAB.AD_NUMTALAO = ${queryParams.numeroModial}`);
+    }
+
+    if (queryParams.numeroUnico) {
+      conditions.push(`CAB.NUNOTA = ${queryParams.numeroUnico}`);
+    }
+
+    if (queryParams.idParceiro) {
+      conditions.push(`CAB.CODPARC = ${queryParams.idParceiro}`);
+    }
+
+    if (queryParams.codigoTipoMovimento) {
+      conditions.push(`CAB.TIPMOV = '${queryParams.codigoTipoMovimento}'`);
+    }
+
+    if (queryParams.codigoTipoOperacao) {
+      conditions.push(`CAB.CODTIPOPER = ${queryParams.codigoTipoOperacao}`);
+    }
+
+    if (queryParams.codigoTipoEntrega) {
+      conditions.push(
+        `CAB.AD_TIPOENTREGA = '${queryParams.codigoTipoEntrega}'`,
+      );
+    }
+
+    if (queryParams.dataInicio) {
+      conditions.push(
+        `CAB.DTMOV >= TO_DATE('${queryParams.dataInicio}', 'YYYY-MM-DD')`,
+      );
+    }
+
+    if (queryParams.dataFim) {
+      conditions.push(
+        `CAB.DTMOV <= TO_DATE('${queryParams.dataFim}', 'YYYY-MM-DD')`,
+      );
+    }
+
+    const whereClause = conditions.length
+      ? `WHERE ${conditions.join(' AND ')}`
+      : '';
+
     const sql = `
     SELECT 
     CAB.NUNOTA AS numeroUnico, 
@@ -46,7 +108,7 @@ export class FilaConferenciaService {
     USU_ALT.NOMEUSU AS nomeUsuarioAlteracao 
 
     FROM TGFCAB CAB 
-
+    
     LEFT JOIN TSIEMP EMP 
     ON EMP.CODEMP = CAB.CODEMP 
 
@@ -78,8 +140,8 @@ export class FilaConferenciaService {
     ON OPC_TIPOENTREGA.NUCAMPO = 9999990877 
     AND OPC_TIPOENTREGA.VALOR = CAB.AD_TIPOENTREGA 
 
-    WHERE sankhya.SNK_GET_SATUSCONFERENCIA(CAB.NUNOTA) IN ('A', 'AC') 
-    `;
+    ${whereClause}
+  `;
     const response = await this.dbExplorerClient.executeQuery(sql);
     return response;
   }
