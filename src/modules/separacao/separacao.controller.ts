@@ -54,6 +54,11 @@ export class SeparacaoController {
     return this.service.postAtualizarDimensoesVolume(body);
   }
 
+  @Post('finalizar-conferencia')
+  postFinalizarConferencia(@Body() body: NumeroConferenciaFilter) {
+    return this.service.postFinalizarConferencia(body);
+  }
+
   @Get('dados-basicos')
   @ApiOperation({ summary: 'Dados básicos do pedido' })
   getDadosBasicos(@Query() queryParam: NumeroUnicoFilter) {
