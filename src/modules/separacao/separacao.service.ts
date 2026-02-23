@@ -419,7 +419,7 @@ export class SeparacaoService {
 
     WHERE IVC.NUCONF = ${numeroConferencia}
       AND IVC.QTD > 0
-    ORDER BY IVC.SEQVOL, IVC.SEQITEM
+    ORDER BY IVC.SEQVOL DESC, IVC.SEQITEM
   `;
 
     let response = await this.dbExplorerClient.executeQuery(sql);
