@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import PDFDocument from 'pdfkit';
 import { SankhyaDatasetSPClient } from 'src/http-client/dataset-sp/dataset-sp.client';
 import { SankhyaDBExplorerSPClient } from 'src/http-client/db-explorer-sp/db-explorer-sp.client';
 import {
@@ -294,6 +295,68 @@ export class SeparacaoService {
   }
 
   // gets
+  async downloadEtiqueta({
+    numeroConferencia,
+  }: NumeroConferenciaFilter): Promise<Buffer | null> {
+    const sql = `
+    SELECT DISTINCT
+    IVC.SEQVOL AS numeroVolume
+
+    FROM TGFIVC IVC
+    
+    WHERE IVC.NUCONF = ${numeroConferencia}
+    AND IVC.QTD > 0
+  `;
+
+    const volumes = await this.dbExplorerClient.executeQuery(sql);
+
+    if (!volumes?.length) {
+      return null;
+    }
+
+    const doc = new PDFDocument({
+      size: 'A4',
+      margin: 40,
+    });
+
+    const buffers: Buffer[] = [];
+    doc.on('data', (chunk) => buffers.push(chunk));
+
+    let y = 50;
+    const alturaEtiqueta = 60;
+
+    volumes.forEach((volume) => {
+      if (y + alturaEtiqueta > 800) {
+        doc.addPage();
+        y = 50;
+      }
+
+      doc.rect(40, y, 520, 40).stroke();
+
+      doc
+        .fontSize(18)
+        .text(
+          `Volume ${volume.NUMEROVOLUME ?? volume.numeroVolume}`,
+          40,
+          y + 12,
+          {
+            width: 520,
+            align: 'center',
+          },
+        );
+
+      y += alturaEtiqueta;
+    });
+
+    doc.end();
+
+    return await new Promise((resolve) => {
+      doc.on('end', () => {
+        resolve(Buffer.concat(buffers));
+      });
+    });
+  }
+
   async getDadosBasicos({ numeroUnico }: NumeroUnicoFilter) {
     const sql = `
     SELECT 
