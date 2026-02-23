@@ -54,15 +54,15 @@ export class FilaConferenciaService {
     }
 
     if (queryParams.dataInicio) {
-      conditions.push(
-        `CAB.DTMOV >= TO_DATE('${queryParams.dataInicio}', 'YYYY-MM-DD')`,
-      );
+      conditions.push(`
+        CAST(CAB.DTMOV AS date) >= '${queryParams.dataInicio}'
+      `);
     }
 
     if (queryParams.dataFim) {
-      conditions.push(
-        `CAB.DTMOV <= TO_DATE('${queryParams.dataFim}', 'YYYY-MM-DD')`,
-      );
+      conditions.push(`
+        CAST(CAB.DTMOV AS date) <= '${queryParams.dataFim}'
+      `);
     }
 
     const whereClause = conditions.length
