@@ -9,17 +9,17 @@ export class EmpresaService {
   async getEmpresas(queryParams: EmpresaFilter) {
     const { search } = queryParams;
     const sql = `
-    SELECT 
-    PAR.CODPARC AS id, 
-    PAR.RAZAOSOCIAL AS nome, 
-    PAR.CGC_CPF AS cpfCnpj 
-    FROM TGFPAR PAR 
-    WHERE 
-    UPPER(PAR.RAZAOSOCIAL) LIKE UPPER('%${search}%') 
-    OR REPLACE(REPLACE(REPLACE(PAR.CGC_CPF, '.', ''), '-', ''), '/', '') 
-    LIKE REPLACE(REPLACE(REPLACE('%${search}%', '.', ''), '-', ''), '/', '') 
-    ORDER BY PAR.RAZAOSOCIAL 
-  `;
+      SELECT 
+        EMP.CODEMP AS id,
+        EMP.RAZAOSOCIAL AS nome,
+        EMP.CGC AS cpfCnpj
+      FROM TSIEMP EMP
+      WHERE
+        UPPER(EMP.RAZAOSOCIAL) LIKE UPPER('%${search}%')
+        OR REPLACE(REPLACE(REPLACE(EMP.CGC, '.', ''), '-', ''), '/', '')
+        LIKE REPLACE(REPLACE(REPLACE('%${search}%', '.', ''), '-', ''), '/', '')
+      ORDER BY EMP.RAZAOSOCIAL
+    `;
     const response = await this.dbExplorerClient.executeQuery(sql);
     return response;
   }

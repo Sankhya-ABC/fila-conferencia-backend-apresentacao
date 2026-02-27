@@ -6,9 +6,10 @@ import { AppService } from './app.service';
 import { AuthAppGuard } from './auth-app/auth-app.guard';
 import { AuthAppModule } from './auth-app/auth-app.module';
 import { envMapping, envSchema } from './config/env.schema';
+import { AuthModule } from './modules/auth/auth.module';
+import { EmpresaModule } from './modules/empresa/empresa.module';
 import { FilaConferenciaModule } from './modules/fila-conferencia/fila-conferencia.module';
 import { ParceiroModule } from './modules/parceiro/parceiro.module';
-import { AuthModule } from './modules/auth/auth.module';
 import { SeparacaoModule } from './modules/separacao/separacao.module';
 
 @Module({
@@ -16,6 +17,7 @@ import { SeparacaoModule } from './modules/separacao/separacao.module';
     FilaConferenciaModule,
     AuthAppModule,
     ParceiroModule,
+    EmpresaModule,
     SeparacaoModule,
     AuthModule,
     ConfigModule.forRoot({
