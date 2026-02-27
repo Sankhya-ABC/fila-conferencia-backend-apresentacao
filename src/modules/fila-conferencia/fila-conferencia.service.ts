@@ -10,16 +10,16 @@ export class FilaConferenciaService {
     const conditions: string[] = [];
 
     if (queryParams.codigoStatus) {
-      const statusList = queryParams.codigoStatus
+      const list = queryParams.codigoStatus
         .split(',')
         .map((s) => s.trim())
         .filter(Boolean);
 
-      if (statusList.length) {
+      if (list.length) {
         conditions.push(`
-      sankhya.SNK_GET_SATUSCONFERENCIA(CAB.NUNOTA)
-      IN (${statusList.map((s) => `'${s}'`).join(',')})
-    `);
+          sankhya.SNK_GET_SATUSCONFERENCIA(CAB.NUNOTA)
+          IN (${list.map((s) => `'${s}'`).join(',')})
+        `);
       }
     }
 
@@ -40,17 +40,42 @@ export class FilaConferenciaService {
     }
 
     if (queryParams.codigoTipoMovimento) {
-      conditions.push(`CAB.TIPMOV = '${queryParams.codigoTipoMovimento}'`);
+      const list = queryParams.codigoTipoMovimento
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+      if (list.length) {
+        conditions.push(`
+          CAB.TIPMOV IN (${list.map((s) => `'${s}'`).join(',')})
+        `);
+      }
     }
 
     if (queryParams.codigoTipoOperacao) {
-      conditions.push(`CAB.CODTIPOPER = ${queryParams.codigoTipoOperacao}`);
+      const list = queryParams.codigoTipoOperacao
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+      if (list.length) {
+        conditions.push(`
+          CAB.CODTIPOPER IN (${list.join(',')})
+        `);
+      }
     }
 
     if (queryParams.codigoTipoEntrega) {
-      conditions.push(
-        `CAB.AD_TIPOENTREGA = '${queryParams.codigoTipoEntrega}'`,
-      );
+      const list = queryParams.codigoTipoEntrega
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+      if (list.length) {
+        conditions.push(`
+          CAB.AD_TIPOENTREGA IN (${list.map((s) => `'${s}'`).join(',')})
+        `);
+      }
     }
 
     if (queryParams.dataInicio) {
