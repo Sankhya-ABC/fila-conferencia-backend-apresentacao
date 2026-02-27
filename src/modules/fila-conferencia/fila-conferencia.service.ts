@@ -39,6 +39,10 @@ export class FilaConferenciaService {
       conditions.push(`CAB.CODPARC = ${queryParams.idParceiro}`);
     }
 
+    if (queryParams.idEmpresa) {
+      conditions.push(`EMP.CODEMP = ${queryParams.idEmpresa}`);
+    }
+
     if (queryParams.codigoTipoMovimento) {
       const list = queryParams.codigoTipoMovimento
         .split(',')

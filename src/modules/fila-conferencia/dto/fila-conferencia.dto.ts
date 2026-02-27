@@ -41,6 +41,11 @@ export class FilaConferenciaFilter {
   @ApiPropertyOptional()
   @IsString()
   @IsOptional()
+  idEmpresa?: string;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
   codigoTipoMovimento?: string;
 
   @ApiPropertyOptional()
