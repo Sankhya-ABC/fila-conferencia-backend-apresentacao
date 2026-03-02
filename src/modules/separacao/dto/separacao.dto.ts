@@ -57,12 +57,6 @@ export class PostRemoverVolumeParams {
   @IsNumber()
   @IsNotEmpty()
   numeroVolume: number;
-
-  @ApiProperty({ example: 1234 })
-  @Type(() => Number)
-  @IsNumber()
-  @IsNotEmpty()
-  numeroUnico: number;
 }
 
 export class AtualizarCabecalhoConferenciaParams {

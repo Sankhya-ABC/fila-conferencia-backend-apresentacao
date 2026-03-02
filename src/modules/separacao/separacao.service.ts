@@ -87,11 +87,9 @@ export class SeparacaoService {
   async postRemoverVolume({
     numeroConferencia,
     numeroVolume,
-    numeroUnico,
   }: {
     numeroConferencia: number;
     numeroVolume: number;
-    numeroUnico: number;
   }) {
     const itensVolume = await this.dbExplorerClient.executeQuery(`
     SELECT SEQITEM, CODPROD, CONTROLE, QTD
@@ -105,31 +103,6 @@ export class SeparacaoService {
     }
 
     for (const item of itensVolume) {
-      const controle = (item.CONTROLE ?? ' ').trim() || ' ';
-
-      const restante = await this.dbExplorerClient.executeQuery(`
-      SELECT SUM(QTD) AS TOTAL
-      FROM TGFIVC
-      WHERE NUCONF = ${numeroConferencia}
-        AND CODPROD = ${item.CODPROD}
-        AND COALESCE(CONTROLE, ' ') = '${controle}'
-        AND SEQVOL <> ${numeroVolume}
-    `);
-
-      const novoTotal = Number(restante?.[0]?.TOTAL || 0);
-
-      await this.datasetSP.save({
-        entityName: 'ItemNota',
-        pk: {
-          NUNOTA: numeroUnico,
-          CODPROD: item.CODPROD,
-          CONTROLE: controle,
-        },
-        fieldsAndValues: {
-          QTDCONFERIDA: novoTotal,
-        },
-      });
-
       await this.datasetSP.save({
         entityName: 'ItemVolumeConferencia',
         pk: {
@@ -138,7 +111,10 @@ export class SeparacaoService {
           SEQITEM: item.SEQITEM,
         },
         fieldsAndValues: {
-          QTD: 0,
+          CODPROD: null,
+          CONTROLE: null,
+          QTD: null,
+          CODVOL: null,
         },
       });
     }
@@ -177,7 +153,10 @@ export class SeparacaoService {
           SEQITEM: item.SEQITEM,
         },
         fieldsAndValues: {
-          QTD: 0,
+          CODPROD: null,
+          CONTROLE: null,
+          QTD: null,
+          CODVOL: null,
         },
       });
     }
