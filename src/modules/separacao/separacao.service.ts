@@ -75,7 +75,6 @@ export class SeparacaoService {
       await this.inserirItemConferidoVolume({
         numeroConferencia,
         numeroVolume,
-        seqItem,
         idProduto,
         controle,
         quantidade,
@@ -735,17 +734,10 @@ export class SeparacaoService {
       };
     }
 
-    const ultimo = await this.dbExplorerClient.executeQuery(`
-    SELECT COALESCE(MAX(SEQITEM), 0) AS ULTIMO
-    FROM TGFIVC
-    WHERE NUCONF = ${numeroConferencia}
-      AND SEQVOL = ${numeroVolume}
-  `);
-
     return {
       existe: false,
-      seqItem: ultimo[0].ULTIMO + 1,
-      qtdAtual: 0,
+      seqItem: null,
+      qtdAtual: null,
     };
   }
 
@@ -795,7 +787,6 @@ export class SeparacaoService {
   async inserirItemConferidoVolume({
     numeroConferencia,
     numeroVolume,
-    seqItem,
     idProduto,
     controle,
     quantidade,
@@ -803,13 +794,25 @@ export class SeparacaoService {
   }: {
     numeroConferencia: number;
     numeroVolume: number;
-    seqItem: number;
     idProduto: number;
     controle: string;
     quantidade: number;
     unidade: string;
   }) {
-    return await this.datasetSP.save({
+    const menorSlotVazio = await this.dbExplorerClient.executeQuery(`
+    SELECT MIN(SEQITEM) AS SEQITEM
+    FROM TGFIVC
+    WHERE NUCONF = ${numeroConferencia}
+      AND SEQVOL = ${numeroVolume}
+      AND CODPROD IS NULL
+      AND (CONTROLE IS NULL OR CONTROLE = ' ')
+      AND (QTD IS NULL OR QTD = 0)
+      AND CODVOL IS NULL
+  `);
+
+    const seqItem = menorSlotVazio[0].SEQITEM ?? 1;
+
+    let req: any = {
       entityName: 'ItemVolumeConferencia',
       fieldsAndValues: {
         NUCONF: numeroConferencia,
@@ -820,6 +823,16 @@ export class SeparacaoService {
         QTD: quantidade,
         CODVOL: unidade,
       },
-    });
+    };
+
+    if (!!menorSlotVazio[0].SEQITEM) {
+      req.pk = {
+        NUCONF: numeroConferencia,
+        SEQVOL: numeroVolume,
+        SEQITEM: seqItem,
+      };
+    }
+
+    return await this.datasetSP.save(req);
   }
 }
