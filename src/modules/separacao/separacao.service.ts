@@ -117,6 +117,30 @@ export class SeparacaoService {
         },
       });
     }
+
+    const existenteCubagem = await this.dbExplorerClient.executeQuery(`
+    SELECT NUCUBAGEM
+    FROM AD_CUBAGEM
+    WHERE NUCONF = ${numeroConferencia}
+      AND SEQVOL = ${numeroVolume}
+  `);
+
+    if (existenteCubagem.length > 0) {
+      await this.datasetSP.save({
+        entityName: 'AD_CUBAGEM',
+        pk: {
+          NUCUBAGEM: existenteCubagem[0].NUCUBAGEM,
+        },
+        fieldsAndValues: {
+          ALTURA: null,
+          LARGURA: null,
+          COMPRIMENTO: null,
+          PESO: null,
+        },
+      });
+
+      return;
+    }
   }
 
   async postDevolverItemConferido({
@@ -739,25 +763,6 @@ export class SeparacaoService {
       seqItem: null,
       qtdAtual: null,
     };
-  }
-
-  async obterProximoSeqItem({
-    numeroConferencia,
-    numeroVolume,
-  }: {
-    numeroConferencia: number;
-    numeroVolume: number;
-  }) {
-    const sql = `
-    SELECT COALESCE(MAX(SEQITEM), 0) + 1 AS PROX_SEQITEM
-    FROM TGFIVC
-    WHERE NUCONF = ${numeroConferencia}
-      AND SEQVOL = ${numeroVolume}
-  `;
-
-    const res = await this.dbExplorerClient.executeQuery(sql);
-
-    return res?.[0]?.PROX_SEQITEM;
   }
 
   async atualizarItemConferidoVolume({
