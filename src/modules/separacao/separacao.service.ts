@@ -141,6 +141,8 @@ export class SeparacaoService {
 
       return;
     }
+
+    await this.normalizarVolumes(numeroConferencia);
   }
 
   async postDevolverItemConferido({
@@ -206,6 +208,8 @@ export class SeparacaoService {
         QTDCONFERIDA: novoTotal,
       },
     });
+
+    await this.normalizarVolumes(numeroConferencia);
   }
 
   async postAtualizarDimensoesVolume({
@@ -839,5 +843,156 @@ export class SeparacaoService {
     }
 
     return await this.datasetSP.save(req);
+  }
+
+  async normalizarVolumes(numeroConferencia: number) {
+    const volumes = await this.dbExplorerClient.executeQuery(`
+    SELECT DISTINCT SEQVOL
+    FROM TGFIVC
+    WHERE NUCONF = ${numeroConferencia}
+      AND QTD > 0
+    ORDER BY SEQVOL
+  `);
+
+    if (!volumes?.length) return;
+
+    let seqVolAtual = 1;
+
+    for (const vol of volumes) {
+      const seqVolOrigem = vol.SEQVOL;
+
+      if (seqVolOrigem === seqVolAtual) {
+        seqVolAtual++;
+        continue;
+      }
+
+      const itensOrigem = await this.dbExplorerClient.executeQuery(`
+      SELECT SEQITEM, CODPROD, CONTROLE, QTD, CODVOL
+      FROM TGFIVC
+      WHERE NUCONF = ${numeroConferencia}
+        AND SEQVOL = ${seqVolOrigem}
+        AND QTD > 0
+      ORDER BY SEQITEM
+    `);
+
+      for (const item of itensOrigem) {
+        const controleNormalizado = item.CONTROLE?.trim() || ' ';
+
+        const existente = await this.dbExplorerClient.executeQuery(`
+        SELECT SEQITEM, QTD
+        FROM TGFIVC
+        WHERE NUCONF = ${numeroConferencia}
+          AND SEQVOL = ${seqVolAtual}
+          AND CODPROD = ${item.CODPROD}
+          AND COALESCE(CONTROLE, ' ') = '${controleNormalizado}'
+      `);
+
+        if (existente.length > 0) {
+          await this.datasetSP.save({
+            entityName: 'ItemVolumeConferencia',
+            pk: {
+              NUCONF: numeroConferencia,
+              SEQVOL: seqVolAtual,
+              SEQITEM: existente[0].SEQITEM,
+            },
+            fieldsAndValues: {
+              QTD: Number(existente[0].QTD || 0) + Number(item.QTD || 0),
+            },
+          });
+        } else {
+          const menorSlotVazio = await this.dbExplorerClient.executeQuery(`
+          SELECT MIN(SEQITEM) AS SEQITEM
+          FROM TGFIVC
+          WHERE NUCONF = ${numeroConferencia}
+            AND SEQVOL = ${seqVolAtual}
+            AND CODPROD IS NULL
+            AND (CONTROLE IS NULL OR CONTROLE = ' ')
+            AND (QTD IS NULL OR QTD = 0)
+            AND CODVOL IS NULL
+        `);
+
+          const seqItemDestino = menorSlotVazio[0]?.SEQITEM ?? null;
+
+          let req: any = {
+            entityName: 'ItemVolumeConferencia',
+            fieldsAndValues: {
+              NUCONF: numeroConferencia,
+              SEQVOL: seqVolAtual,
+              SEQITEM: seqItemDestino ?? item.SEQITEM,
+              CODPROD: item.CODPROD,
+              CONTROLE: controleNormalizado,
+              QTD: item.QTD,
+              CODVOL: item.CODVOL,
+            },
+          };
+
+          if (seqItemDestino) {
+            req.pk = {
+              NUCONF: numeroConferencia,
+              SEQVOL: seqVolAtual,
+              SEQITEM: seqItemDestino,
+            };
+          }
+
+          await this.datasetSP.save(req);
+        }
+
+        await this.datasetSP.save({
+          entityName: 'ItemVolumeConferencia',
+          pk: {
+            NUCONF: numeroConferencia,
+            SEQVOL: seqVolOrigem,
+            SEQITEM: item.SEQITEM,
+          },
+          fieldsAndValues: {
+            CODPROD: null,
+            CONTROLE: null,
+            QTD: null,
+            CODVOL: null,
+          },
+        });
+      }
+
+      const cubagemDestino = await this.dbExplorerClient.executeQuery(`
+      SELECT NUCUBAGEM
+      FROM AD_CUBAGEM
+      WHERE NUCONF = ${numeroConferencia}
+        AND SEQVOL = ${seqVolAtual}
+    `);
+
+      if (cubagemDestino.length > 0) {
+        await this.datasetSP.save({
+          entityName: 'AD_CUBAGEM',
+          pk: {
+            NUCUBAGEM: cubagemDestino[0].NUCUBAGEM,
+          },
+          fieldsAndValues: {
+            ALTURA: null,
+            LARGURA: null,
+            COMPRIMENTO: null,
+            PESO: null,
+          },
+        });
+      }
+
+      seqVolAtual++;
+    }
+
+    const qtdVolumes = await this.dbExplorerClient.executeQuery(`
+    SELECT COUNT(DISTINCT SEQVOL) AS TOTAL
+    FROM TGFIVC
+    WHERE NUCONF = ${numeroConferencia}
+      AND QTD > 0
+  `);
+
+    await this.datasetSP.save({
+      entityName: 'CabecalhoConferencia',
+      pk: {
+        NUCONF: numeroConferencia,
+      },
+      fieldsAndValues: {
+        QTDVOL: qtdVolumes[0]?.TOTAL || 0,
+      },
+    });
   }
 }
