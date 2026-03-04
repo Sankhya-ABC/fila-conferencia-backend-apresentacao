@@ -308,11 +308,30 @@ export class SeparacaoService {
     numeroConferencia,
   }: NumeroConferenciaFilter): Promise<Buffer | null> {
     const sql = `
-    SELECT *
-    FROM TGFIVC IVC
-    WHERE IVC.NUCONF = ${numeroConferencia}
-      AND IVC.QTD > 0
-    ORDER BY IVC.SEQVOL ASC, IVC.SEQITEM ASC;
+      SELECT
+        IVC.SEQVOL AS seqVol,
+        IVC.SEQITEM AS seqItem,
+
+        CAB.NUNOTA AS numeroUnico,
+        CAB.NUMNOTA AS notaFiscal,
+
+        PAR.RAZAOSOCIAL AS cliente
+
+      FROM TGFIVC IVC
+
+      JOIN TGFCON2 CON
+        ON CON.NUCONF = IVC.NUCONF
+
+      JOIN TGFCAB CAB
+        ON CAB.NUNOTA = CON.NUNOTAORIG
+
+      JOIN TGFPAR PAR
+        ON PAR.CODPARC = CAB.CODPARC
+
+      WHERE IVC.NUCONF = ${numeroConferencia}
+        AND IVC.QTD > 0
+
+      ORDER BY IVC.SEQVOL ASC, IVC.SEQITEM ASC
   `;
 
     const volumes = await this.dbExplorerClient.executeQuery(sql);
