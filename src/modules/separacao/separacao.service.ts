@@ -1,5 +1,8 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import PDFDocument from 'pdfkit';
+import * as fs from 'fs';
+import * as Handlebars from 'handlebars';
+import * as path from 'path';
+import * as puppeteer from 'puppeteer';
 import { SankhyaDatasetSPClient } from 'src/http-client/dataset-sp/dataset-sp.client';
 import { SankhyaDBExplorerSPClient } from 'src/http-client/db-explorer-sp/db-explorer-sp.client';
 import {
@@ -305,13 +308,11 @@ export class SeparacaoService {
     numeroConferencia,
   }: NumeroConferenciaFilter): Promise<Buffer | null> {
     const sql = `
-    SELECT DISTINCT
-    IVC.SEQVOL AS numeroVolume
-
+    SELECT *
     FROM TGFIVC IVC
-    
     WHERE IVC.NUCONF = ${numeroConferencia}
-    AND IVC.QTD > 0
+      AND IVC.QTD > 0
+    ORDER BY IVC.SEQVOL ASC, IVC.SEQITEM ASC;
   `;
 
     const volumes = await this.dbExplorerClient.executeQuery(sql);
@@ -320,47 +321,32 @@ export class SeparacaoService {
       return null;
     }
 
-    const doc = new PDFDocument({
-      size: 'A4',
-      margin: 40,
+    const filePath = path.join(
+      process.cwd(),
+      'src/templates/template-etiqueta.html',
+    );
+
+    const html = fs.readFileSync(filePath, 'utf-8');
+
+    const template = Handlebars.compile(html);
+
+    const finalHtml = template({ volumes });
+
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+
+    await page.setContent(finalHtml, {
+      waitUntil: 'networkidle0',
     });
 
-    const buffers: Buffer[] = [];
-    doc.on('data', (chunk) => buffers.push(chunk));
-
-    let y = 50;
-    const alturaEtiqueta = 60;
-
-    volumes.forEach((volume) => {
-      if (y + alturaEtiqueta > 800) {
-        doc.addPage();
-        y = 50;
-      }
-
-      doc.rect(40, y, 520, 40).stroke();
-
-      doc
-        .fontSize(18)
-        .text(
-          `Volume ${volume.NUMEROVOLUME ?? volume.numeroVolume}`,
-          40,
-          y + 12,
-          {
-            width: 520,
-            align: 'center',
-          },
-        );
-
-      y += alturaEtiqueta;
+    const pdfUint8 = await page.pdf({
+      format: 'A4',
+      printBackground: true,
     });
 
-    doc.end();
+    await browser.close();
 
-    return await new Promise((resolve) => {
-      doc.on('end', () => {
-        resolve(Buffer.concat(buffers));
-      });
-    });
+    return Buffer.from(pdfUint8);
   }
 
   async getDadosBasicos({ numeroUnico }: NumeroUnicoFilter) {
