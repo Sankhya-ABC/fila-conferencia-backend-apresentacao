@@ -308,35 +308,36 @@ export class SeparacaoService {
     numeroConferencia,
   }: NumeroConferenciaFilter): Promise<Buffer | null> {
     const sql = `
-      SELECT
-        IVC.SEQVOL AS seqVol,
-        IVC.SEQITEM AS seqItem,
+    SELECT
+      IVC.SEQVOL AS seqVol,
+      IVC.SEQITEM AS seqItem,
 
-        CAB.NUNOTA AS numeroUnico,
-        CAB.NUMNOTA AS notaFiscal,
+      CAB.NUNOTA AS numeroUnico,
+      CAB.NUMNOTA AS notaFiscal,
+      CAB.UFADQUIRENTE AS uf,
 
-        PAR.RAZAOSOCIAL AS cliente
+      PAR.RAZAOSOCIAL AS cliente
 
-      FROM TGFIVC IVC
+    FROM TGFIVC IVC
 
-      JOIN TGFCON2 CON
-        ON CON.NUCONF = IVC.NUCONF
+    JOIN TGFCON2 CON
+      ON CON.NUCONF = IVC.NUCONF
 
-      JOIN TGFCAB CAB
-        ON CAB.NUNOTA = CON.NUNOTAORIG
+    JOIN TGFCAB CAB
+      ON CAB.NUNOTA = CON.NUNOTAORIG
 
-      JOIN TGFPAR PAR
-        ON PAR.CODPARC = CAB.CODPARC
+    JOIN TGFPAR PAR
+      ON PAR.CODPARC = CAB.CODPARC
 
-      WHERE IVC.NUCONF = ${numeroConferencia}
-        AND IVC.QTD > 0
+    WHERE IVC.NUCONF = ${numeroConferencia}
+      AND IVC.QTD > 0
 
-      ORDER BY IVC.SEQVOL ASC, IVC.SEQITEM ASC
+    ORDER BY IVC.SEQVOL ASC, IVC.SEQITEM ASC
   `;
 
-    const volumes = await this.dbExplorerClient.executeQuery(sql);
+    const rows = await this.dbExplorerClient.executeQuery(sql);
 
-    if (!volumes?.length) {
+    if (!rows?.length) {
       return null;
     }
 
@@ -348,6 +349,33 @@ export class SeparacaoService {
     const html = fs.readFileSync(filePath, 'utf-8');
 
     const template = Handlebars.compile(html);
+
+    const logoPath = path.join(process.cwd(), 'src/templates/modial-logo.png');
+
+    const logoBase64 = `data:image/png;base64,${fs
+      .readFileSync(logoPath)
+      .toString('base64')}`;
+
+    const volumes = rows.map((row) => {
+      const seqVol = String(row.SEQVOL).padStart(2, '0');
+      const seqItem = String(row.SEQITEM).padStart(2, '0');
+
+      return {
+        cliente: row.CLIENTE,
+        numeroUnico: row.NUMEROUNICO,
+        notaFiscal: String(row.NOTAFISCAL),
+        uf: row.UF ?? '',
+
+        seqVol,
+        seqItem,
+
+        notaFiscalDigitos: String(row.NOTAFISCAL).split(''),
+        seqVolDigitos: seqVol.split(''),
+        seqItemDigitos: seqItem.split(''),
+
+        logoBase64,
+      };
+    });
 
     const finalHtml = template({ volumes });
 
