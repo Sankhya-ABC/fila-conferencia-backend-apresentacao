@@ -25,19 +25,27 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+        margin-bottom: 20px;
+      }
+
+      .container-nota-fiscal {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
       }
 
       .container-volume-item {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-top: 20px;
       }
 
       .numeros-container {
         display: flex;
         gap: 6px;
         align-items: center;
+        font-size: 35px;
       }
 
       .numero {
@@ -50,8 +58,8 @@
         justify-content: center;
       }
 
-      img {
-        height: 60px;
+      .logo {
+        height: 95px;
       }
     </style>
   </head>
@@ -65,15 +73,17 @@
         <p>UF: {{uf}}</p>
       </div>
 
-      <p>Nota Fiscal:</p>
-      <div class="numeros-container">
-        {{#each notaFiscalDigitos}}
-        <div class="numero">{{this}}</div>
-        {{/each}}
+      <div class="container-nota-fiscal">
+        <p>Nota Fiscal:</p>
+        <div class="numeros-container">
+          {{#each notaFiscalDigitos}}
+          <div class="numero">{{this}}</div>
+          {{/each}}
+        </div>
       </div>
 
       <div class="container-volume-item">
-        <img src="{{logoBase64}}" alt="Logo Modial" />
+        <img class="logo" src="{{logoBase64}}" alt="Logo Modial" />
 
         <div class="numeros-container">
           {{#each seqVolDigitos}}

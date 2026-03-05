@@ -357,19 +357,19 @@ export class SeparacaoService {
       .toString('base64')}`;
 
     const volumes = rows.map((row) => {
-      const seqVol = String(row.SEQVOL).padStart(2, '0');
-      const seqItem = String(row.SEQITEM).padStart(2, '0');
+      const seqVol = String(row.seqVol).padStart(2, '0');
+      const seqItem = String(row.seqItem).padStart(2, '0');
 
       return {
-        cliente: row.CLIENTE,
-        numeroUnico: row.NUMEROUNICO,
-        notaFiscal: String(row.NOTAFISCAL),
-        uf: row.UF ?? '',
+        cliente: row.cliente,
+        numeroUnico: row.numeroUnico,
+        notaFiscal: String(row.notaFiscal),
+        uf: row.uf ?? '',
 
         seqVol,
         seqItem,
 
-        notaFiscalDigitos: String(row.NOTAFISCAL).split(''),
+        notaFiscalDigitos: String(row.notaFiscal).split(''),
         seqVolDigitos: seqVol.split(''),
         seqItemDigitos: seqItem.split(''),
 
