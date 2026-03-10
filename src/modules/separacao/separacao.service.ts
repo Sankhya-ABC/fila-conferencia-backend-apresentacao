@@ -460,16 +460,28 @@ export class SeparacaoService {
       response?.map(async (data) => {
         const { idProduto, controle } = data;
 
-        let imagem = await this.obterImagemProduto(idProduto);
+        let imagem = null;
+        try {
+          imagem = await this.obterImagemProduto(idProduto);
+        } catch (error) {
+          console.log(`Erro ao buscar imagem do produto ${idProduto}`);
+        }
 
-        let codigoBarras = await this.obterCodigosDeBarra({
-          idProduto,
-          controle,
-        });
+        let codigoBarras = [];
+        try {
+          const codigos = await this.obterCodigosDeBarra({
+            idProduto,
+            controle,
+          });
 
-        codigoBarras = codigoBarras?.map((codigoBarra) =>
-          codigoBarra.CODIGO?.trim(),
-        );
+          codigoBarras = codigos?.map((codigoBarra) =>
+            codigoBarra.CODIGO?.trim(),
+          );
+        } catch (error) {
+          console.log(
+            `Erro ao buscar código de barras do produto ${idProduto}`,
+          );
+        }
 
         return { ...data, codigoBarras, imagem };
       }),
