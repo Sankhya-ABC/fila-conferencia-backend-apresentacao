@@ -509,42 +509,42 @@ export class SeparacaoService {
 
   async getVolumes({ numeroConferencia }: NumeroConferenciaFilter) {
     const sql = `
-    SELECT 
-    IVC.SEQVOL AS numeroVolume,
-    IVC.CODPROD AS idProduto,
-    PRO.DESCRPROD AS descricaoProduto,
-    IVC.QTD AS quantidade,
-    IVC.CODVOL AS unidade,
-    IVC.CONTROLE AS controle,
+  SELECT 
+  IVC.SEQVOL AS numeroVolume,
+  IVC.CODPROD AS idProduto,
+  PRO.DESCRPROD AS descricaoProduto,
+  IVC.QTD AS quantidade,
+  IVC.CODVOL AS unidade,
+  IVC.CONTROLE AS controle,
 
-    CUB.ALTURA AS altura,
-    CUB.LARGURA AS largura,
-    CUB.COMPRIMENTO AS comprimento,
-    CUB.PESO AS peso
+  CUB.ALTURA AS altura,
+  CUB.LARGURA AS largura,
+  CUB.COMPRIMENTO AS comprimento,
+  CUB.PESO AS peso
 
-    FROM TGFIVC IVC
+  FROM TGFIVC IVC
 
-    JOIN TGFPRO PRO
-      ON PRO.CODPROD = IVC.CODPROD
+  JOIN TGFPRO PRO
+    ON PRO.CODPROD = IVC.CODPROD
 
-    LEFT JOIN (
-      SELECT
-        NUCONF,
-        SEQVOL,
-        MAX(ALTURA) AS ALTURA,
-        MAX(LARGURA) AS LARGURA,
-        MAX(COMPRIMENTO) AS COMPRIMENTO,
-        MAX(PESO) AS PESO
-      FROM AD_CUBAGEM
-      GROUP BY NUCONF, SEQVOL
-    ) CUB
-      ON CUB.NUCONF = IVC.NUCONF
-     AND CUB.SEQVOL = IVC.SEQVOL
+  LEFT JOIN (
+    SELECT
+      NUCONF,
+      SEQVOL,
+      MAX(ALTURA) AS ALTURA,
+      MAX(LARGURA) AS LARGURA,
+      MAX(COMPRIMENTO) AS COMPRIMENTO,
+      MAX(PESO) AS PESO
+    FROM AD_CUBAGEM
+    GROUP BY NUCONF, SEQVOL
+  ) CUB
+    ON CUB.NUCONF = IVC.NUCONF
+   AND CUB.SEQVOL = IVC.SEQVOL
 
-    WHERE IVC.NUCONF = ${numeroConferencia}
-      AND IVC.QTD > 0
-    ORDER BY IVC.SEQVOL DESC, IVC.SEQITEM
-  `;
+  WHERE IVC.NUCONF = ${numeroConferencia}
+    AND IVC.QTD > 0
+  ORDER BY IVC.SEQVOL DESC, IVC.SEQITEM
+`;
 
     let response = await this.dbExplorerClient.executeQuery(sql);
 
@@ -552,7 +552,12 @@ export class SeparacaoService {
       response?.map(async (data) => {
         const { idProduto } = data;
 
-        let imagem = await this.obterImagemProduto(idProduto);
+        let imagem = null;
+        try {
+          imagem = await this.obterImagemProduto(idProduto);
+        } catch (error) {
+          console.log(`Erro ao buscar imagem do produto ${idProduto}`);
+        }
 
         return { ...data, imagem };
       }),
@@ -582,9 +587,7 @@ export class SeparacaoService {
       });
     }
 
-    const result = Array.from(volumeMap.values());
-
-    return result;
+    return Array.from(volumeMap.values());
   }
 
   // auxiliares
