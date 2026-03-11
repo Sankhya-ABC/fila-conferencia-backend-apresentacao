@@ -1,4 +1,4 @@
-import { HttpException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { GatewayClient } from '../gateway/gateway.client';
 
@@ -38,13 +38,12 @@ export class SankhyaDBExplorerSPClient {
       requestBody: { sql },
     };
 
-    try {
-      const response = await this.gateway.client.post(this.endpoint, body);
+    const response = await this.gateway.client.post(this.endpoint, body);
+    if (response.data?.status === '1') {
       return this.buildDbExplorerResponse(response.data);
-    } catch (error: any) {
-      throw new HttpException(
-        error?.response?.data || 'Erro ao executar DbExplorerSP.executeQuery',
-        error?.response?.status || 500,
+    } else {
+      throw new BadRequestException(
+        response.data?.statusMessage || 'Erro ao executar consulta',
       );
     }
   }
