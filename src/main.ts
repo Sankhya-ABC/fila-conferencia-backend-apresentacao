@@ -6,6 +6,7 @@ import {
 } from '@nestjs/platform-fastify';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { LoggerInterceptor } from './core/logger/logger.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -29,6 +30,10 @@ async function bootstrap() {
       transform: true,
     }),
   );
+
+  const logger = app.get('LOGGER');
+
+  app.useGlobalInterceptors(new LoggerInterceptor(logger));
 
   const config = new DocumentBuilder()
     .setTitle('Fila de Conferência')
