@@ -429,29 +429,45 @@ export class SeparacaoService {
 
   async getItensPedido({ numeroUnico }: NumeroUnicoFilter) {
     const sql = `
-    SELECT 
-      ITE.CODPROD AS idProduto,
-      PRO.DESCRPROD AS nomeProduto,
+  SELECT 
+    ITE.CODPROD AS idProduto,
+    PRO.DESCRPROD AS nomeProduto,
 
-      ITE.QTDNEG AS quantidade, 
-      ITE.CODVOL AS unidade,
+    ITE.QTDNEG AS quantidadeBase,
+    
+    CASE 
+      WHEN VOA.DIVIDEMULTIPLICA IS NULL THEN ITE.QTDNEG
+      WHEN VOA.DIVIDEMULTIPLICA = 'D' THEN ITE.QTDNEG * VOA.QUANTIDADE
+      WHEN VOA.DIVIDEMULTIPLICA = 'M' THEN ITE.QTDNEG / VOA.QUANTIDADE
+      ELSE ITE.QTDNEG
+    END AS quantidadeConvertida,
 
-      PRO.CODMARCA AS idMarca,
-      PRO.MARCA AS nomeMarca,
+    ITE.CODVOL AS unidade,
 
-      PAR.CODPARC AS idFornecedor,
-      PAR.NOMEPARC AS nomeFornecedor,
+    PRO.CODMARCA AS idMarca,
+    PRO.MARCA AS nomeMarca,
 
-      ITE.CONTROLE AS controle,
-      PRO.COMPLDESC AS complemento
+    PAR.CODPARC AS idFornecedor,
+    PAR.NOMEPARC AS nomeFornecedor,
 
-    FROM TGFITE ITE
+    ITE.CONTROLE AS controle,
+    PRO.COMPLDESC AS complemento
 
-    LEFT JOIN TGFPRO PRO ON PRO.CODPROD = ITE.CODPROD
-    LEFT JOIN TGFPAR PAR ON PAR.CODPARC = PRO.CODPARCFORN
+  FROM TGFITE ITE
 
-    WHERE ITE.NUNOTA = ${numeroUnico}
-      AND (ITE.QTDNEG - COALESCE(ITE.QTDCONFERIDA, 0)) > 0
+  LEFT JOIN TGFPRO PRO 
+    ON PRO.CODPROD = ITE.CODPROD
+
+  LEFT JOIN TGFPAR PAR 
+    ON PAR.CODPARC = PRO.CODPARCFORN
+
+  LEFT JOIN TGFVOA VOA 
+    ON VOA.CODPROD = ITE.CODPROD
+   AND VOA.CODVOL = ITE.CODVOL
+   AND COALESCE(VOA.CONTROLE,' ') = COALESCE(ITE.CONTROLE,' ')
+
+  WHERE ITE.NUNOTA = ${numeroUnico}
+    AND (ITE.QTDNEG - COALESCE(ITE.QTDCONFERIDA, 0)) > 0
   `;
 
     let response = await this.dbExplorerClient.executeQuery(sql);
