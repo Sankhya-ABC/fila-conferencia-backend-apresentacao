@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { AuthAppModule } from 'src/auth-app/auth-app.module';
+import { AuthAppModule } from 'src/guards/auth-app/auth-app.module';
 import { SankhyaLoadRecordsClient } from './load-records.client';
 import { GatewayClientModule } from '../gateway/gateway.module';
 

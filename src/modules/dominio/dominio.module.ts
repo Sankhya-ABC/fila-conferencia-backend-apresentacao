@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
-import { AuthAppModule } from 'src/auth-app/auth-app.module';
+import { AuthAppModule } from 'src/guards/auth-app/auth-app.module';
 import { SankhyaDBExplorerSPClientModule } from 'src/http-client/db-explorer-sp/db-explorer-sp.module';
 import { GatewayClientModule } from 'src/http-client/gateway/gateway.module';
 import { DominioController } from './dominio.controller';
 import { DominioService } from './dominio.service';
-import { AuthUserModule } from 'src/auth-user/auth-user.module';
+import { AuthUserModule } from 'src/guards/auth-user/auth-user.module';
 
 @Module({
   controllers: [DominioController],
