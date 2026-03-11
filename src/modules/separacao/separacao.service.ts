@@ -430,46 +430,53 @@ export class SeparacaoService {
   async getItensPedido({ numeroUnico }: NumeroUnicoFilter) {
     const sql = `
     SELECT 
-        ITE.CODPROD AS idProduto,
-        PRO.DESCRPROD AS nomeProduto,
+      ITE.CODPROD AS idProduto,
+      PRO.DESCRPROD AS nomeProduto,
 
-        ROUND(ITE.QTDNEG, 2) AS quantidadeBase,
-        
-        ROUND(
-          CASE 
-            WHEN VOA.DIVIDEMULTIPLICA IS NULL THEN ITE.QTDNEG
-            WHEN VOA.DIVIDEMULTIPLICA = 'D' THEN ITE.QTDNEG * VOA.QUANTIDADE
-            WHEN VOA.DIVIDEMULTIPLICA = 'M' THEN ITE.QTDNEG / VOA.QUANTIDADE
-            ELSE ITE.QTDNEG
-          END
-        ,2) AS quantidadeConvertida,
+      ROUND(ITE.QTDNEG - COALESCE(ITE.QTDCONFERIDA,0), 5) AS quantidadeBase,
+      
+      ROUND(
+        CASE 
+          WHEN VOA.DIVIDEMULTIPLICA IS NULL THEN ITE.QTDNEG
+          WHEN VOA.DIVIDEMULTIPLICA = 'D' THEN ITE.QTDNEG * VOA.QUANTIDADE
+          WHEN VOA.DIVIDEMULTIPLICA = 'M' THEN ITE.QTDNEG / VOA.QUANTIDADE
+          ELSE ITE.QTDNEG
+        END
+        -
+        CASE 
+          WHEN VOA.DIVIDEMULTIPLICA IS NULL THEN COALESCE(ITE.QTDCONFERIDA,0)
+          WHEN VOA.DIVIDEMULTIPLICA = 'D' THEN COALESCE(ITE.QTDCONFERIDA,0) * VOA.QUANTIDADE
+          WHEN VOA.DIVIDEMULTIPLICA = 'M' THEN COALESCE(ITE.QTDCONFERIDA,0) / VOA.QUANTIDADE
+          ELSE COALESCE(ITE.QTDCONFERIDA,0)
+        END
+      ,5) AS quantidadeConvertida,
 
-        ITE.CODVOL AS unidade,
+      ITE.CODVOL AS unidade,
 
-        PRO.CODMARCA AS idMarca,
-        PRO.MARCA AS nomeMarca,
+      PRO.CODMARCA AS idMarca,
+      PRO.MARCA AS nomeMarca,
 
-        PAR.CODPARC AS idFornecedor,
-        PAR.NOMEPARC AS nomeFornecedor,
+      PAR.CODPARC AS idFornecedor,
+      PAR.NOMEPARC AS nomeFornecedor,
 
-        COALESCE(ITE.CONTROLE,' ') AS controle,
-        PRO.COMPLDESC AS complemento
+      COALESCE(ITE.CONTROLE,' ') AS controle,
+      PRO.COMPLDESC AS complemento
 
-    FROM TGFITE ITE
+  FROM TGFITE ITE
 
-    LEFT JOIN TGFPRO PRO 
-      ON PRO.CODPROD = ITE.CODPROD
+  LEFT JOIN TGFPRO PRO 
+    ON PRO.CODPROD = ITE.CODPROD
 
-    LEFT JOIN TGFPAR PAR 
-      ON PAR.CODPARC = PRO.CODPARCFORN
+  LEFT JOIN TGFPAR PAR 
+    ON PAR.CODPARC = PRO.CODPARCFORN
 
-    LEFT JOIN TGFVOA VOA 
-      ON VOA.CODPROD = ITE.CODPROD
-    AND VOA.CODVOL = ITE.CODVOL
-    AND COALESCE(VOA.CONTROLE,' ') = COALESCE(ITE.CONTROLE,' ')
+  LEFT JOIN TGFVOA VOA 
+    ON VOA.CODPROD = ITE.CODPROD
+  AND VOA.CODVOL = ITE.CODVOL
+  AND COALESCE(VOA.CONTROLE,' ') = COALESCE(ITE.CONTROLE,' ')
 
-    WHERE ITE.NUNOTA = ${numeroUnico}
-      AND (ITE.QTDNEG - COALESCE(ITE.QTDCONFERIDA, 0)) > 0
+  WHERE ITE.NUNOTA = ${numeroUnico}
+    AND (ITE.QTDNEG - COALESCE(ITE.QTDCONFERIDA, 0)) > 0
   `;
 
     let response = await this.dbExplorerClient.executeQuery(sql);
