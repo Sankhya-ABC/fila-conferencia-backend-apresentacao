@@ -54,7 +54,7 @@ export class SeparacaoService {
     numeroVolume,
     idProduto,
     controle,
-    quantidade,
+    quantidadeConvertida,
     unidade,
   }: PostItemConferidoVolume) {
     await this.garantirVolume({ numeroConferencia, numeroVolume });
@@ -72,7 +72,7 @@ export class SeparacaoService {
         numeroConferencia,
         numeroVolume,
         seqItem: seqItem,
-        quantidade: qtdAtual + quantidade,
+        quantidadeConvertida: qtdAtual + quantidadeConvertida,
       });
     } else {
       await this.inserirItemConferidoVolume({
@@ -80,7 +80,7 @@ export class SeparacaoService {
         numeroVolume,
         idProduto,
         controle,
-        quantidade,
+        quantidadeConvertida,
         unidade,
       });
     }
@@ -511,7 +511,7 @@ export class SeparacaoService {
     SELECT
       CODPROD AS idProduto,
       CONTROLE AS controle,
-      SUM(QTD) AS quantidade
+      SUM(QTD) AS quantidadeConvertida
 
     FROM TGFIVC
 
@@ -529,7 +529,7 @@ export class SeparacaoService {
   IVC.SEQVOL AS numeroVolume,
   IVC.CODPROD AS idProduto,
   PRO.DESCRPROD AS descricaoProduto,
-  IVC.QTD AS quantidade,
+  IVC.QTD AS quantidadeConvertida,
   IVC.CODVOL AS unidade,
   IVC.CONTROLE AS controle,
 
@@ -597,7 +597,7 @@ export class SeparacaoService {
         idProduto: item.idProduto,
         descricaoProduto: item.descricaoProduto,
         imagem: item.imagem,
-        quantidade: item.quantidade,
+        quantidadeConvertida: item.quantidadeConvertida,
         unidade: item.unidade,
         controle: item.controle ?? '',
       });
@@ -837,12 +837,12 @@ export class SeparacaoService {
     numeroConferencia,
     numeroVolume,
     seqItem,
-    quantidade,
+    quantidadeConvertida,
   }: {
     numeroConferencia: number;
     numeroVolume: number;
     seqItem: number;
-    quantidade: number;
+    quantidadeConvertida: number;
   }) {
     await this.datasetSP.save({
       entityName: 'ItemVolumeConferencia',
@@ -852,7 +852,7 @@ export class SeparacaoService {
         SEQITEM: seqItem,
       },
       fieldsAndValues: {
-        QTD: quantidade,
+        QTD: quantidadeConvertida,
       },
     });
   }
@@ -862,14 +862,14 @@ export class SeparacaoService {
     numeroVolume,
     idProduto,
     controle,
-    quantidade,
+    quantidadeConvertida,
     unidade,
   }: {
     numeroConferencia: number;
     numeroVolume: number;
     idProduto: number;
     controle: string;
-    quantidade: number;
+    quantidadeConvertida: number;
     unidade: string;
   }) {
     const menorSlotVazio = await this.dbExplorerClient.executeQuery(`
@@ -893,7 +893,7 @@ export class SeparacaoService {
         SEQITEM: seqItem,
         CODPROD: idProduto,
         CONTROLE: controle,
-        QTD: quantidade,
+        QTD: quantidadeConvertida,
         CODVOL: unidade,
       },
     };

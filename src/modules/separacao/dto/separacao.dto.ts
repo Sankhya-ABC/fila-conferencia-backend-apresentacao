@@ -121,7 +121,7 @@ export class PostItemConferidoVolume {
   @Type(() => Number)
   @IsNumber()
   @IsNotEmpty()
-  quantidade: number;
+  quantidadeConvertida: number;
 
   @ApiProperty({ example: 'UN' })
   @IsString()
