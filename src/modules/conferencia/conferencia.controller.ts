@@ -1,14 +1,14 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { AuthUserGuard } from 'src/auth-user/auth-user.guard';
-import { FilaConferenciaFilter } from './dto/fila-conferencia.dto';
-import { FilaConferenciaService } from './fila-conferencia.service';
+import { ConferenciaService } from './conferencia.service';
+import { FilaConferenciaFilter } from './dto/conferencia.dto';
 
 @UseGuards(AuthUserGuard)
-@ApiTags('Fila de Conferências')
-@Controller('fila-conferencias')
-export class FilaConferenciaController {
-  constructor(private readonly service: FilaConferenciaService) {}
+@ApiTags('Conferências')
+@Controller('conferencias')
+export class ConferenciaController {
+  constructor(private readonly service: ConferenciaService) {}
 
   @Get()
   @ApiOperation({ summary: 'Listar todas Filas de Conferências com Filtro' })

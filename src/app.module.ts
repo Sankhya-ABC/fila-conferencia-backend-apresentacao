@@ -8,13 +8,13 @@ import { AuthAppModule } from './auth-app/auth-app.module';
 import { envMapping, envSchema } from './config/env.schema';
 import { AuthModule } from './modules/auth/auth.module';
 import { EmpresaModule } from './modules/empresa/empresa.module';
-import { FilaConferenciaModule } from './modules/fila-conferencia/fila-conferencia.module';
+import { ConferenciaModule } from './modules/conferencia/conferencia.module';
 import { ParceiroModule } from './modules/parceiro/parceiro.module';
 import { SeparacaoModule } from './modules/separacao/separacao.module';
 
 @Module({
   imports: [
-    FilaConferenciaModule,
+    ConferenciaModule,
     AuthAppModule,
     ParceiroModule,
     EmpresaModule,
