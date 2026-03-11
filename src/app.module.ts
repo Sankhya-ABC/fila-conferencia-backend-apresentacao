@@ -11,11 +11,13 @@ import { EmpresaModule } from './modules/empresa/empresa.module';
 import { ConferenciaModule } from './modules/conferencia/conferencia.module';
 import { ParceiroModule } from './modules/parceiro/parceiro.module';
 import { SeparacaoModule } from './modules/separacao/separacao.module';
+import { DominioModule } from './modules/dominio/dominio.module';
 
 @Module({
   imports: [
-    ConferenciaModule,
     AuthAppModule,
+    ConferenciaModule,
+    DominioModule,
     ParceiroModule,
     EmpresaModule,
     SeparacaoModule,
