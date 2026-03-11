@@ -1071,5 +1071,107 @@ export class SeparacaoService {
         QTDVOL: qtdVolumes[0]?.TOTAL || 0,
       },
     });
+
+    await this.sincronizarDetalhesConferencia(numeroConferencia);
+  }
+
+  async sincronizarDetalhesConferencia(numeroConferencia: number) {
+    const now = new Date();
+    const date = now.toISOString().slice(0, 10).split('-').reverse().join('/');
+    const hour = now.toISOString().slice(11, 16);
+    const dh = `${date} ${hour}`;
+
+    const itens = await this.dbExplorerClient.executeQuery(`
+    SELECT
+      IVC.CODPROD,
+      COALESCE(IVC.CONTROLE,' ') AS CONTROLE,
+      SUM(IVC.QTD) AS QTD_CONVERTIDA,
+      ITE.QTDNEG
+    FROM TGFIVC IVC
+    JOIN TGFCON2 CON ON CON.NUCONF = IVC.NUCONF
+    JOIN TGFITE ITE ON ITE.NUNOTA = CON.NUNOTAORIG AND ITE.CODPROD = IVC.CODPROD
+    WHERE IVC.NUCONF = ${numeroConferencia}
+      AND IVC.QTD > 0
+    GROUP BY IVC.CODPROD, IVC.CONTROLE, ITE.QTDNEG
+  `);
+
+    const existentes = await this.dbExplorerClient.executeQuery(`
+    SELECT SEQCONF, CODPROD, CONTROLE
+    FROM TGFCOI2
+    WHERE NUCONF = ${numeroConferencia}
+  `);
+
+    const usados = new Set<number>();
+
+    for (const item of itens) {
+      const fator = item.QTDNEG / item.QTD_CONVERTIDA;
+
+      const qtdBase = Number((item.QTD_CONVERTIDA * fator).toFixed(5));
+
+      let seq = existentes.find(
+        (e) =>
+          e.CODPROD === item.CODPROD && (e.CONTROLE ?? ' ') === item.CONTROLE,
+      )?.SEQCONF;
+
+      console.log('teste', {
+        fator,
+        qtdBase,
+        seq,
+      });
+
+      if (!seq) {
+        const seqLivre = await this.dbExplorerClient.executeQuery(`
+        SELECT MIN(SEQCONF) AS SEQCONF
+        FROM TGFCOI2
+        WHERE NUCONF = ${numeroConferencia}
+          AND CODPROD IS NULL
+      `);
+
+        seq = seqLivre[0]?.SEQCONF ?? existentes.length + 1;
+
+        console.log('seqLivre', seqLivre);
+        console.log('seq', seq);
+      }
+
+      usados.add(seq);
+
+      await this.datasetSP.save({
+        entityName: 'DetalhesConferencia',
+        pk: {
+          NUCONF: numeroConferencia,
+          SEQCONF: seq,
+        },
+        fieldsAndValues: {
+          CODPROD: item.CODPROD,
+          CODBARRA: item.CODPROD,
+          CODVOL: null,
+          CONTROLE: item.CONTROLE,
+          QTDCONF: qtdBase,
+          QTDCONFVOLPAD: qtdBase,
+          COPIA: null,
+          DHALTER: dh,
+        },
+      });
+    }
+
+    for (const antigo of existentes) {
+      if (!usados.has(antigo.SEQCONF)) {
+        await this.datasetSP.save({
+          entityName: 'DetalhesConferencia',
+          pk: {
+            NUCONF: numeroConferencia,
+            SEQCONF: antigo.SEQCONF,
+          },
+          fieldsAndValues: {
+            CODBARRA: null,
+            CODPROD: null,
+            CODVOL: null,
+            CONTROLE: null,
+            COPIA: null,
+            DHALTER: null,
+          },
+        });
+      }
+    }
   }
 }
