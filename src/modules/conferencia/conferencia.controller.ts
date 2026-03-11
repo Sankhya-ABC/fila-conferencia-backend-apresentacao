@@ -1,6 +1,6 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { AuthUserGuard } from 'src/guards/auth-user/auth-user.guard';
+import { AuthUserGuard } from 'src/core/guards/auth-user/auth-user.guard';
 import { ConferenciaService } from './conferencia.service';
 import { FilaConferenciaFilter } from './dto/conferencia.dto';
 

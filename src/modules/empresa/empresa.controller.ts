@@ -2,7 +2,7 @@ import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { EmpresaFilter } from './dto/empresa.dto';
 import { EmpresaService } from './empresa.service';
-import { AuthUserGuard } from 'src/guards/auth-user/auth-user.guard';
+import { AuthUserGuard } from 'src/core/guards/auth-user/auth-user.guard';
 
 @UseGuards(AuthUserGuard)
 @ApiTags('Empresas')

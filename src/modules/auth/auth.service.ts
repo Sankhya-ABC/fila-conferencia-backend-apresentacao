@@ -1,6 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
-import { AuthUserService } from 'src/guards/auth-user/auth-user.service';
+import { AuthUserService } from 'src/core/guards/auth-user/auth-user.service';
 import { SankhyaMobileLoginSPClient } from 'src/http-client/mobile-login-sp/mobile-login-sp.client';
 
 @Injectable()

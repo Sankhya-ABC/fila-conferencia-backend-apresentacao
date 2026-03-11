@@ -1,6 +1,6 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { AuthUserGuard } from 'src/guards/auth-user/auth-user.guard';
+import { AuthUserGuard } from 'src/core/guards/auth-user/auth-user.guard';
 import { DominioService } from './dominio.service';
 
 @UseGuards(AuthUserGuard)

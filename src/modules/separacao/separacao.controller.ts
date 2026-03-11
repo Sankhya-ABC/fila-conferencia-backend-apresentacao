@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { FastifyReply } from 'fastify';
-import { AuthUserGuard } from 'src/guards/auth-user/auth-user.guard';
+import { AuthUserGuard } from 'src/core/guards/auth-user/auth-user.guard';
 import {
   IniciarConferenciaBody,
   NumeroConferenciaFilter,

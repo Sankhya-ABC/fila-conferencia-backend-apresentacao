@@ -5,7 +5,7 @@ import axios, {
   AxiosInstance,
   InternalAxiosRequestConfig,
 } from 'axios';
-import { AuthAppService } from 'src/guards/auth-app/auth-app.service';
+import { AuthAppService } from 'src/core/guards/auth-app/auth-app.service';
 
 @Injectable()
 export class GatewayClient {

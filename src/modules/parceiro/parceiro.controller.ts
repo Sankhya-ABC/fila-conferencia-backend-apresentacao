@@ -2,7 +2,7 @@ import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ParceiroFilter } from './dto/parceiro.dto';
 import { ParceiroService } from './parceiro.service';
-import { AuthUserGuard } from 'src/guards/auth-user/auth-user.guard';
+import { AuthUserGuard } from 'src/core/guards/auth-user/auth-user.guard';
 
 @UseGuards(AuthUserGuard)
 @ApiTags('Parceiros')
