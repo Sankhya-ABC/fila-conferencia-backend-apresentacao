@@ -529,22 +529,43 @@ export class SeparacaoService {
   async getVolumes({ numeroConferencia }: NumeroConferenciaFilter) {
     const sql = `
   SELECT 
-  IVC.SEQVOL AS numeroVolume,
-  IVC.CODPROD AS idProduto,
-  PRO.DESCRPROD AS descricaoProduto,
-  IVC.QTD AS quantidadeConvertida,
-  IVC.CODVOL AS unidade,
-  IVC.CONTROLE AS controle,
+    IVC.SEQVOL AS numeroVolume,
+    IVC.CODPROD AS idProduto,
+    PRO.DESCRPROD AS descricaoProduto,
+    IVC.QTD AS quantidadeConvertida,
+    IVC.CODVOL AS unidade,
+    COALESCE(IVC.CONTROLE,' ') AS controle,
 
-  CUB.ALTURA AS altura,
-  CUB.LARGURA AS largura,
-  CUB.COMPRIMENTO AS comprimento,
-  CUB.PESO AS peso
+    ITE.QTDNEG,
+
+    CASE 
+      WHEN VOA.DIVIDEMULTIPLICA IS NULL THEN ITE.QTDNEG
+      WHEN VOA.DIVIDEMULTIPLICA = 'D' THEN ITE.QTDNEG * VOA.QUANTIDADE
+      WHEN VOA.DIVIDEMULTIPLICA = 'M' THEN ITE.QTDNEG / VOA.QUANTIDADE
+      ELSE ITE.QTDNEG
+    END AS QTD_CONVERTIDA_PEDIDO,
+
+    CUB.ALTURA,
+    CUB.LARGURA,
+    CUB.COMPRIMENTO,
+    CUB.PESO
 
   FROM TGFIVC IVC
 
   JOIN TGFPRO PRO
     ON PRO.CODPROD = IVC.CODPROD
+
+  JOIN TGFCON2 CON
+    ON CON.NUCONF = IVC.NUCONF
+
+  JOIN TGFITE ITE
+    ON ITE.NUNOTA = CON.NUNOTAORIG
+   AND ITE.CODPROD = IVC.CODPROD
+
+  LEFT JOIN TGFVOA VOA
+    ON VOA.CODPROD = ITE.CODPROD
+   AND VOA.CODVOL = ITE.CODVOL
+   AND COALESCE(VOA.CONTROLE,' ') = COALESCE(ITE.CONTROLE,' ')
 
   LEFT JOIN (
     SELECT
@@ -562,6 +583,7 @@ export class SeparacaoService {
 
   WHERE IVC.NUCONF = ${numeroConferencia}
     AND IVC.QTD > 0
+
   ORDER BY IVC.SEQVOL DESC, IVC.SEQITEM
 `;
 
@@ -574,11 +596,23 @@ export class SeparacaoService {
         let imagem = null;
         try {
           imagem = await this.obterImagemProduto(idProduto);
-        } catch (error) {
-          //
+        } catch {}
+
+        let fatorConversao = 1;
+
+        if (data.QTD_CONVERTIDA_PEDIDO && data.QTD_CONVERTIDA_PEDIDO !== 0) {
+          fatorConversao = data.QTDNEG / data.QTD_CONVERTIDA_PEDIDO;
         }
 
-        return { ...data, imagem };
+        const quantidadeBase = Number(
+          (data.quantidadeConvertida * fatorConversao).toFixed(5),
+        );
+
+        return {
+          ...data,
+          quantidadeBase,
+          imagem,
+        };
       }),
     );
 
@@ -601,6 +635,7 @@ export class SeparacaoService {
         descricaoProduto: item.descricaoProduto,
         imagem: item.imagem,
         quantidadeConvertida: item.quantidadeConvertida,
+        quantidadeBase: item.quantidadeBase,
         unidade: item.unidade,
         controle: item.controle ?? '',
       });
