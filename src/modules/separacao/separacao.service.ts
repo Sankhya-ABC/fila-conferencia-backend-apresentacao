@@ -300,9 +300,8 @@ export class SeparacaoService {
     numeroConferencia,
   }: NumeroConferenciaFilter): Promise<Buffer | null> {
     const sql = `
-    SELECT
+    SELECT DISTINCT
       IVC.SEQVOL AS seqVol,
-      IVC.SEQITEM AS seqItem,
 
       CAB.NUNOTA AS numeroUnico,
       CAB.NUMNOTA AS notaFiscal,
@@ -324,7 +323,7 @@ export class SeparacaoService {
     WHERE IVC.NUCONF = ${numeroConferencia}
       AND IVC.QTD > 0
 
-    ORDER BY IVC.SEQVOL ASC, IVC.SEQITEM ASC
+    ORDER BY IVC.SEQVOL ASC
   `;
 
     const rows = await this.dbExplorerClient.executeQuery(sql);
@@ -348,9 +347,11 @@ export class SeparacaoService {
       .readFileSync(logoPath)
       .toString('base64')}`;
 
+    const totalVolumes = rows.length;
+
     const volumes = rows.map((row) => {
       const seqVol = String(row.seqVol).padStart(2, '0');
-      const seqItem = String(row.seqItem).padStart(2, '0');
+      const totalVol = String(totalVolumes).padStart(2, '0');
 
       return {
         cliente: row.cliente,
@@ -359,11 +360,11 @@ export class SeparacaoService {
         uf: row.uf ?? '',
 
         seqVol,
-        seqItem,
+        totalVol,
 
         notaFiscalDigitos: String(row.notaFiscal).split(''),
         seqVolDigitos: seqVol.split(''),
-        seqItemDigitos: seqItem.split(''),
+        totalVolDigitos: totalVol.split(''),
 
         logoBase64,
       };
