@@ -1097,14 +1097,22 @@ export class SeparacaoService {
     SELECT
       IVC.CODPROD,
       COALESCE(IVC.CONTROLE,' ') AS CONTROLE,
-      SUM(IVC.QTD) AS QTD_CONVERTIDA,
-      ITE.QTDNEG
+      SUM(IVC.QTD) AS QTD_CONFERIDA,
+      ITE.QTDNEG,
+      ITE.QTDCONFERIDA
     FROM TGFIVC IVC
-    JOIN TGFCON2 CON ON CON.NUCONF = IVC.NUCONF
-    JOIN TGFITE ITE ON ITE.NUNOTA = CON.NUNOTAORIG AND ITE.CODPROD = IVC.CODPROD
+    JOIN TGFCON2 CON 
+      ON CON.NUCONF = IVC.NUCONF
+    JOIN TGFITE ITE 
+      ON ITE.NUNOTA = CON.NUNOTAORIG
+     AND ITE.CODPROD = IVC.CODPROD
     WHERE IVC.NUCONF = ${numeroConferencia}
       AND IVC.QTD > 0
-    GROUP BY IVC.CODPROD, IVC.CONTROLE, ITE.QTDNEG
+    GROUP BY
+      IVC.CODPROD,
+      IVC.CONTROLE,
+      ITE.QTDNEG,
+      ITE.QTDCONFERIDA
   `);
 
     const existentes = await this.dbExplorerClient.executeQuery(`
@@ -1113,6 +1121,7 @@ export class SeparacaoService {
     WHERE NUCONF = ${numeroConferencia}
   `);
 
+    // Zera antes de recalcular
     for (const antigo of existentes) {
       await this.datasetSP.save({
         entityName: 'DetalhesConferencia',
@@ -1129,8 +1138,13 @@ export class SeparacaoService {
     const usados = new Set<number>();
 
     for (const item of itens) {
-      const fator = item.QTDNEG / item.QTD_CONVERTIDA;
-      const qtdBase = Number((item.QTD_CONVERTIDA * fator).toFixed(5));
+      let fator = 1;
+
+      if (item.QTDNEG && item.QTDNEG !== 0) {
+        fator = item.QTDCONFERIDA / item.QTDNEG;
+      }
+
+      const qtdBase = Number((item.QTD_CONFERIDA * fator).toFixed(5));
 
       let seq = existentes.find(
         (e) =>
