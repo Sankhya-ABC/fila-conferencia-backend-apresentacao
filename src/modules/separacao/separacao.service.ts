@@ -398,6 +398,7 @@ export class SeparacaoService {
 
     sankhya.SNK_GET_SATUSCONFERENCIA(CAB.NUNOTA) AS codigoStatus, 
     CAB.TIPMOV AS codigoTipoMovimento, 
+    TPO.DESCROPER AS descricaoTipoOperacao, 
 
     PAR.CODPARC AS idParceiro, 
     PAR.RAZAOSOCIAL AS nomeParceiro, 
@@ -412,6 +413,10 @@ export class SeparacaoService {
 
     LEFT JOIN TGFVEN VEN 
     ON VEN.CODVEND = CAB.CODVEND 
+
+    LEFT JOIN TGFTOP TPO 
+    ON TPO.CODTIPOPER = CAB.CODTIPOPER 
+    AND TPO.DHALTER = CAB.DHTIPOPER 
 
     WHERE CAB.NUNOTA = ${numeroUnico} 
     `;
@@ -717,7 +722,6 @@ export class SeparacaoService {
     WHERE NUNOTAORIG = ${numeroUnico}
       AND NUCONF IS NOT NULL
       AND STATUS = 'A'
-    FETCH FIRST 1 ROWS ONLY
   `);
 
     if (existente.length > 0) {
