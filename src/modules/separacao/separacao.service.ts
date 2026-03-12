@@ -535,6 +535,62 @@ export class SeparacaoService {
   async getVolumes({ numeroConferencia }: NumeroConferenciaFilter) {
     const sql = `
     SELECT 
+    CAB.TIPMOV AS codigoTipoMovimento, 
+    TPO.DESCROPER AS descricaoTipoOperacao 
+
+    FROM TGFCAB CAB 
+
+    LEFT JOIN TGFTOP TPO 
+    ON TPO.CODTIPOPER = CAB.CODTIPOPER 
+    AND TPO.DHALTER = CAB.DHTIPOPER 
+
+    WHERE CAB.NUCONFATUAL = ${numeroConferencia} 
+    `;
+    const response = await this.dbExplorerClient.executeQuery(sql);
+
+    const { codigoTipoMovimento, descricaoTipoOperacao } = response?.[0] || {};
+
+    if (
+      codigoTipoMovimento === 'P' &&
+      descricaoTipoOperacao === 'CUBAGEM DE PEDIDO'
+    ) {
+      return await this.getVolumesNaoDetalhados({ numeroConferencia });
+    } else {
+      return await this.getVolumesDetalhados({ numeroConferencia });
+    }
+  }
+
+  async getVolumesNaoDetalhados({
+    numeroConferencia,
+  }: NumeroConferenciaFilter) {
+    const sql = `
+    SELECT
+      CUB.SEQVOL AS numeroVolume,
+      CUB.ALTURA AS altura,
+      CUB.LARGURA AS largura,
+      CUB.COMPRIMENTO AS comprimento,
+      CUB.PESO AS peso
+    FROM AD_CUBAGEM CUB
+    WHERE CUB.NUCONF = ${numeroConferencia}
+    ORDER BY CUB.SEQVOL
+  `;
+
+    const rows = await this.dbExplorerClient.executeQuery(sql);
+
+    if (!rows?.length) return [];
+
+    return rows.map((row) => ({
+      numeroVolume: row.numeroVolume ?? null,
+      altura: row.altura ?? null,
+      largura: row.largura ?? null,
+      comprimento: row.comprimento ?? null,
+      peso: row.peso ?? null,
+      itens: [],
+    }));
+  }
+  async getVolumesDetalhados({ numeroConferencia }: NumeroConferenciaFilter) {
+    const sql = `
+    SELECT 
       IVC.SEQVOL AS numeroVolume,
       IVC.CODPROD AS idProduto,
       PRO.DESCRPROD AS descricaoProduto,
