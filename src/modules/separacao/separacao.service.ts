@@ -204,18 +204,6 @@ export class SeparacaoService {
 
     const novoTotal = Number(restante?.[0]?.TOTAL || 0);
 
-    await this.datasetSP.save({
-      entityName: 'ItemNota',
-      pk: {
-        NUNOTA: numeroUnico,
-        CODPROD: idProduto,
-        CONTROLE: controleNormalizado,
-      },
-      fieldsAndValues: {
-        QTDCONFERIDA: novoTotal,
-      },
-    });
-
     await this.normalizarVolumes(numeroConferencia);
   }
 
@@ -1125,11 +1113,23 @@ export class SeparacaoService {
     WHERE NUCONF = ${numeroConferencia}
   `);
 
+    for (const antigo of existentes) {
+      await this.datasetSP.save({
+        entityName: 'DetalhesConferencia',
+        pk: {
+          NUCONF: numeroConferencia,
+          SEQCONF: antigo.SEQCONF,
+        },
+        fieldsAndValues: {
+          QTDCONFVOLPAD: null,
+        },
+      });
+    }
+
     const usados = new Set<number>();
 
     for (const item of itens) {
       const fator = item.QTDNEG / item.QTD_CONVERTIDA;
-
       const qtdBase = Number((item.QTD_CONVERTIDA * fator).toFixed(5));
 
       let seq = existentes.find(
@@ -1179,22 +1179,6 @@ export class SeparacaoService {
           DHALTER: dh,
         },
       });
-    }
-
-    for (const antigo of existentes) {
-      if (!usados.has(antigo.SEQCONF)) {
-        await this.datasetSP.save({
-          entityName: 'DetalhesConferencia',
-          pk: {
-            NUCONF: numeroConferencia,
-            SEQCONF: antigo.SEQCONF,
-          },
-          fieldsAndValues: {
-            QTDCONF: null,
-            QTDCONFVOLPAD: null,
-          },
-        });
-      }
     }
   }
 }
