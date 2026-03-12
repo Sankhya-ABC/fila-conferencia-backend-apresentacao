@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import * as fs from 'fs';
 import * as Handlebars from 'handlebars';
 import * as path from 'path';
@@ -16,12 +16,14 @@ import {
   PostAtualizarDimensoesVolumeParams,
   PostItemConferidoVolume,
 } from './dto/separacao.dto';
+import type { Logger } from 'pino';
 
 @Injectable()
 export class SeparacaoService {
   constructor(
     private readonly dbExplorerClient: SankhyaDBExplorerSPClient,
     private readonly datasetSP: SankhyaDatasetSPClient,
+    @Inject('LOGGER') private readonly logger: Logger,
   ) {}
 
   private imagemCache = new Map<number, CacheItem>();
@@ -84,6 +86,8 @@ export class SeparacaoService {
         unidade,
       });
     }
+
+    await this.normalizarVolumes(numeroConferencia);
   }
 
   async postRemoverVolume({
@@ -493,7 +497,7 @@ export class SeparacaoService {
         try {
           imagem = await this.obterImagemProduto(idProduto);
         } catch (error) {
-          console.log(`Erro ao buscar imagem do produto ${idProduto}`);
+          //
         }
 
         let codigoBarras = [];
@@ -507,9 +511,7 @@ export class SeparacaoService {
             codigoBarra.CODIGO?.trim(),
           );
         } catch (error) {
-          console.log(
-            `Erro ao buscar código de barras do produto ${idProduto}`,
-          );
+          //
         }
 
         return { ...data, codigoBarras, imagem };
@@ -585,7 +587,7 @@ export class SeparacaoService {
         try {
           imagem = await this.obterImagemProduto(idProduto);
         } catch (error) {
-          console.log(`Erro ao buscar imagem do produto ${idProduto}`);
+          //
         }
 
         return { ...data, imagem };
@@ -885,41 +887,63 @@ export class SeparacaoService {
     quantidadeConvertida: number;
     unidade: string;
   }) {
-    const menorSlotVazio = await this.dbExplorerClient.executeQuery(`
-    SELECT MIN(SEQITEM) AS SEQITEM
+    const slot = await this.dbExplorerClient.executeQuery(`
+    SELECT 
+      SEQITEM,
+      CODPROD
     FROM TGFIVC
     WHERE NUCONF = ${numeroConferencia}
       AND SEQVOL = ${numeroVolume}
-      AND CODPROD IS NULL
-      AND (CONTROLE IS NULL OR CONTROLE = ' ')
-      AND (QTD IS NULL OR QTD = 0)
-      AND CODVOL IS NULL
+    ORDER BY SEQITEM
   `);
 
-    const seqItem = menorSlotVazio[0].SEQITEM ?? 1;
+    let seqItemLivre = null;
 
-    let req: any = {
+    for (const row of slot) {
+      if (row.CODPROD === null) {
+        seqItemLivre = row.SEQITEM;
+        break;
+      }
+    }
+
+    if (seqItemLivre) {
+      return await this.datasetSP.save({
+        entityName: 'ItemVolumeConferencia',
+        pk: {
+          NUCONF: numeroConferencia,
+          SEQVOL: numeroVolume,
+          SEQITEM: seqItemLivre,
+        },
+        fieldsAndValues: {
+          CODPROD: idProduto,
+          CONTROLE: controle,
+          QTD: quantidadeConvertida,
+          CODVOL: unidade,
+        },
+      });
+    }
+
+    const prox = await this.dbExplorerClient.executeQuery(`
+    SELECT COALESCE(MAX(SEQITEM),0) + 1 AS SEQITEM
+    FROM TGFIVC
+    WHERE NUCONF = ${numeroConferencia}
+      AND SEQVOL = ${numeroVolume}
+  `);
+
+    const seqItemNovo = prox[0].SEQITEM;
+
+    return await this.datasetSP.save({
       entityName: 'ItemVolumeConferencia',
       fieldsAndValues: {
         NUCONF: numeroConferencia,
         SEQVOL: numeroVolume,
-        SEQITEM: seqItem,
+        SEQITEM: seqItemNovo,
         CODPROD: idProduto,
         CONTROLE: controle,
         QTD: quantidadeConvertida,
         CODVOL: unidade,
       },
-    };
-
-    if (!!menorSlotVazio[0].SEQITEM) {
-      req.pk = {
-        NUCONF: numeroConferencia,
-        SEQVOL: numeroVolume,
-        SEQITEM: seqItem,
-      };
-    }
-
-    return await this.datasetSP.save(req);
+    });
   }
 
   async normalizarVolumes(numeroConferencia: number) {
@@ -1113,12 +1137,6 @@ export class SeparacaoService {
           e.CODPROD === item.CODPROD && (e.CONTROLE ?? ' ') === item.CONTROLE,
       )?.SEQCONF;
 
-      console.log('teste', {
-        fator,
-        qtdBase,
-        seq,
-      });
-
       if (!seq) {
         const seqLivre = await this.dbExplorerClient.executeQuery(`
         SELECT MIN(SEQCONF) AS SEQCONF
@@ -1127,10 +1145,19 @@ export class SeparacaoService {
           AND CODPROD IS NULL
       `);
 
-        seq = seqLivre[0]?.SEQCONF ?? existentes.length + 1;
+        const seqLivreValor = seqLivre?.[0]?.SEQCONF;
 
-        console.log('seqLivre', seqLivre);
-        console.log('seq', seq);
+        if (seqLivreValor) {
+          seq = seqLivreValor;
+        } else {
+          const prox = await this.dbExplorerClient.executeQuery(`
+          SELECT COALESCE(MAX(SEQCONF),0) + 1 AS SEQCONF
+          FROM TGFCOI2
+          WHERE NUCONF = ${numeroConferencia}
+        `);
+
+          seq = prox[0].SEQCONF;
+        }
       }
 
       usados.add(seq);
