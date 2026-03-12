@@ -1190,12 +1190,8 @@ export class SeparacaoService {
             SEQCONF: antigo.SEQCONF,
           },
           fieldsAndValues: {
-            CODBARRA: null,
-            CODPROD: null,
-            CODVOL: null,
-            CONTROLE: null,
-            COPIA: null,
-            DHALTER: null,
+            QTDCONF: null,
+            QTDCONFVOLPAD: null,
           },
         });
       }
