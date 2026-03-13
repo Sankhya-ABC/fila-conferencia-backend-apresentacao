@@ -90,6 +90,24 @@ export class SeparacaoController {
       .send(pdfBuffer);
   }
 
+  @Post('gerar-volumes-lote')
+  @ApiOperation({ summary: 'Gerar volumes em lote' })
+  postGerarVolumesLote(@Body() body: any) {
+    return this.service.gerarVolumesLote(body);
+  }
+
+  @Post('deletar-volume-lote')
+  @ApiOperation({ summary: 'Deletar volume lote' })
+  postDeletarVolumeLote(@Body() body: any) {
+    return this.service.deletarVolumeLote(body);
+  }
+
+  @Post('dimensoes-volume-lote')
+  @ApiOperation({ summary: 'Atualizar dimensões de lote de volumes' })
+  postAtualizarDimensoesVolumeLote(@Body() body: any) {
+    return this.service.salvarDimensoesVolumeLote(body);
+  }
+
   @Get('dados-basicos')
   @ApiOperation({ summary: 'Dados Básicos do Pedido' })
   getDadosBasicos(@Query() queryParam: NumeroUnicoFilter) {

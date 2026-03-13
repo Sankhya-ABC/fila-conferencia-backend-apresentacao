@@ -572,15 +572,17 @@ export class SeparacaoService {
       CUB.PESO AS peso
     FROM AD_CUBAGEM CUB
     WHERE CUB.NUCONF = ${numeroConferencia}
+    AND (
+      ALTURA IS NOT NULL
+      OR LARGURA IS NOT NULL
+      OR COMPRIMENTO IS NOT NULL
+      OR PESO IS NOT NULL
+    )
     GROUP BY
       CUB.ALTURA,
       CUB.LARGURA,
       CUB.COMPRIMENTO,
       CUB.PESO
-    ORDER BY
-      CUB.ALTURA,
-      CUB.LARGURA,
-      CUB.COMPRIMENTO
   `;
 
     const rows = await this.dbExplorerClient.executeQuery(sql);
@@ -714,6 +716,146 @@ export class SeparacaoService {
     }
 
     return Array.from(volumeMap.values());
+  }
+
+  async gerarVolumesLote({
+    numeroConferencia,
+    quantidadeLote,
+    altura,
+    largura,
+    comprimento,
+    peso,
+  }) {
+    const sql = `
+    SELECT
+      NUCUBAGEM,
+      SEQVOL,
+      ALTURA,
+      LARGURA,
+      COMPRIMENTO,
+      PESO
+    FROM AD_CUBAGEM
+    WHERE NUCONF = ${numeroConferencia}
+    ORDER BY SEQVOL
+  `;
+
+    const rows = await this.dbExplorerClient.executeQuery(sql);
+
+    const linhasVazias = rows.filter(
+      (r) => !r.altura && !r.largura && !r.comprimento && !r.peso,
+    );
+
+    let numeroVolume = rows.length
+      ? Math.max(...rows.map((r) => r.seqvol || 0)) + 1
+      : 1;
+
+    let restante = quantidadeLote;
+
+    for (const linha of linhasVazias) {
+      if (restante <= 0) break;
+
+      await this.datasetSP.save({
+        entityName: 'AD_CUBAGEM',
+        fieldsAndValues: {
+          NUCUBAGEM: linha.nucubagem,
+          ALTURA: altura,
+          LARGURA: largura,
+          COMPRIMENTO: comprimento,
+          PESO: peso,
+        },
+      });
+
+      restante--;
+    }
+
+    while (restante > 0) {
+      const nucubagem = await this.obterProximoIdCubagem();
+
+      await this.datasetSP.save({
+        entityName: 'AD_CUBAGEM',
+        fieldsAndValues: {
+          NUCUBAGEM: nucubagem,
+          NUCONF: numeroConferencia,
+          SEQVOL: numeroVolume++,
+          ALTURA: altura,
+          LARGURA: largura,
+          COMPRIMENTO: comprimento,
+          PESO: peso,
+        },
+      });
+
+      restante--;
+    }
+  }
+
+  async deletarVolumeLote({
+    numeroConferencia,
+    altura,
+    largura,
+    comprimento,
+    peso,
+  }) {
+    const sql = `
+    SELECT NUCUBAGEM
+    FROM AD_CUBAGEM
+    WHERE NUCONF = ${numeroConferencia}
+      AND ALTURA = ${altura}
+      AND LARGURA = ${largura}
+      AND COMPRIMENTO = ${comprimento}
+      AND PESO = ${peso}
+  `;
+
+    const rows = await this.dbExplorerClient.executeQuery(sql);
+
+    for (const row of rows) {
+      await this.datasetSP.save({
+        entityName: 'AD_CUBAGEM',
+        fieldsAndValues: {
+          NUCUBAGEM: row.nucubagem,
+          ALTURA: null,
+          LARGURA: null,
+          COMPRIMENTO: null,
+          PESO: null,
+        },
+      });
+    }
+  }
+
+  async salvarDimensoesVolumeLote({
+    numeroConferencia,
+    alturaAntiga,
+    larguraAntiga,
+    comprimentoAntigo,
+    pesoAntigo,
+    altura,
+    largura,
+    comprimento,
+    peso,
+  }) {
+    const sql = `
+    SELECT NUCUBAGEM
+    FROM AD_CUBAGEM
+    WHERE NUCONF = ${numeroConferencia}
+      AND ALTURA = ${alturaAntiga}
+      AND LARGURA = ${larguraAntiga}
+      AND COMPRIMENTO = ${comprimentoAntigo}
+      AND PESO = ${pesoAntigo}
+  `;
+
+    const rows = await this.dbExplorerClient.executeQuery(sql);
+
+    for (const row of rows) {
+      await this.datasetSP.save({
+        entityName: 'AD_CUBAGEM',
+        fieldsAndValues: {
+          NUCUBAGEM: row.nucubagem,
+          ALTURA: altura,
+          LARGURA: largura,
+          COMPRIMENTO: comprimento,
+          PESO: peso,
+        },
+      });
+    }
   }
 
   // auxiliares
@@ -1300,5 +1442,16 @@ export class SeparacaoService {
         },
       });
     }
+  }
+
+  async obterProximoIdCubagem() {
+    const sql = `
+    SELECT COALESCE(MAX(NUCUBAGEM), 0) + 1 AS NUCUBAGEM
+    FROM AD_CUBAGEM
+  `;
+
+    const rows = await this.dbExplorerClient.executeQuery(sql);
+
+    return rows?.[0]?.NUCUBAGEM;
   }
 }
