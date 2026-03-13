@@ -571,7 +571,7 @@ export class SeparacaoService {
       CUB.COMPRIMENTO AS comprimento,
       CUB.PESO AS peso
     FROM AD_CUBAGEM CUB
-    WHERE CUB.NUCONF = 7055
+    WHERE CUB.NUCONF = ${numeroConferencia}
     GROUP BY
       CUB.ALTURA,
       CUB.LARGURA,
