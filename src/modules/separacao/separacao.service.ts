@@ -565,14 +565,22 @@ export class SeparacaoService {
   }: NumeroConferenciaFilter) {
     const sql = `
     SELECT
-      CUB.SEQVOL AS numeroVolume,
+      COUNT(*) AS quantidadeLote,
       CUB.ALTURA AS altura,
       CUB.LARGURA AS largura,
       CUB.COMPRIMENTO AS comprimento,
       CUB.PESO AS peso
     FROM AD_CUBAGEM CUB
-    WHERE CUB.NUCONF = ${numeroConferencia}
-    ORDER BY CUB.SEQVOL
+    WHERE CUB.NUCONF = 7055
+    GROUP BY
+      CUB.ALTURA,
+      CUB.LARGURA,
+      CUB.COMPRIMENTO,
+      CUB.PESO
+    ORDER BY
+      CUB.ALTURA,
+      CUB.LARGURA,
+      CUB.COMPRIMENTO
   `;
 
     const rows = await this.dbExplorerClient.executeQuery(sql);
@@ -580,7 +588,8 @@ export class SeparacaoService {
     if (!rows?.length) return [];
 
     return rows.map((row) => ({
-      numeroVolume: row.numeroVolume ?? null,
+      numeroVolume: null,
+      quantidadeLote: Number(row.quantidadeLote) || 0,
       altura: row.altura ?? null,
       largura: row.largura ?? null,
       comprimento: row.comprimento ?? null,
@@ -588,6 +597,7 @@ export class SeparacaoService {
       itens: [],
     }));
   }
+
   async getVolumesDetalhados({ numeroConferencia }: NumeroConferenciaFilter) {
     const sql = `
     SELECT 
