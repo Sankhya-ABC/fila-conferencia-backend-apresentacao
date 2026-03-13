@@ -742,11 +742,15 @@ export class SeparacaoService {
     const rows = await this.dbExplorerClient.executeQuery(sql);
 
     const linhasVazias = rows.filter(
-      (r) => !r.altura && !r.largura && !r.comprimento && !r.peso,
+      (r) =>
+        r.ALTURA == null &&
+        r.LARGURA == null &&
+        r.COMPRIMENTO == null &&
+        r.PESO == null,
     );
 
     let numeroVolume = rows.length
-      ? Math.max(...rows.map((r) => r.seqvol || 0)) + 1
+      ? Math.max(...rows.map((r) => r.SEQVOL || 0)) + 1
       : 1;
 
     let restante = quantidadeLote;
@@ -756,12 +760,14 @@ export class SeparacaoService {
 
       await this.datasetSP.save({
         entityName: 'AD_CUBAGEM',
+        pk: {
+          NUCUBAGEM: linha.NUCUBAGEM,
+        },
         fieldsAndValues: {
-          NUCUBAGEM: linha.nucubagem,
-          ALTURA: altura,
-          LARGURA: largura,
-          COMPRIMENTO: comprimento,
-          PESO: peso,
+          ALTURA: Number(altura),
+          LARGURA: Number(largura),
+          COMPRIMENTO: Number(comprimento),
+          PESO: Number(peso),
         },
       });
 
@@ -777,10 +783,10 @@ export class SeparacaoService {
           NUCUBAGEM: nucubagem,
           NUCONF: numeroConferencia,
           SEQVOL: numeroVolume++,
-          ALTURA: altura,
-          LARGURA: largura,
-          COMPRIMENTO: comprimento,
-          PESO: peso,
+          ALTURA: Number(altura),
+          LARGURA: Number(largura),
+          COMPRIMENTO: Number(comprimento),
+          PESO: Number(peso),
         },
       });
 
@@ -810,8 +816,10 @@ export class SeparacaoService {
     for (const row of rows) {
       await this.datasetSP.save({
         entityName: 'AD_CUBAGEM',
+        pk: {
+          NUCUBAGEM: row.NUCUBAGEM,
+        },
         fieldsAndValues: {
-          NUCUBAGEM: row.nucubagem,
           ALTURA: null,
           LARGURA: null,
           COMPRIMENTO: null,
@@ -847,8 +855,10 @@ export class SeparacaoService {
     for (const row of rows) {
       await this.datasetSP.save({
         entityName: 'AD_CUBAGEM',
+        pk: {
+          NUCUBAGEM: row.NUCUBAGEM,
+        },
         fieldsAndValues: {
-          NUCUBAGEM: row.nucubagem,
           ALTURA: altura,
           LARGURA: largura,
           COMPRIMENTO: comprimento,
