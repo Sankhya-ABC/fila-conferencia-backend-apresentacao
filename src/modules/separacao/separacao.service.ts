@@ -502,7 +502,7 @@ export class SeparacaoService {
     const page = await browser.newPage();
 
     await page.setContent(finalHtml, {
-      waitUntil: 'networkidle0',
+      waitUntil: 'load',
     });
 
     const pdfUint8 = await page.pdf({
