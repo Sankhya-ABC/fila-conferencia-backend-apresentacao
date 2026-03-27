@@ -1,14 +1,5 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Post,
-  Query,
-  Res,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import type { FastifyReply } from 'fastify';
 import { AuthUserGuard } from 'src/core/guards/auth-user/auth-user.guard';
 import {
   NumeroConferenciaFilter,
@@ -54,28 +45,6 @@ export class SeparacaoController {
     @Body() body: PostAtualizarDimensoesVolumeParams,
   ) {
     return this.service.postAtualizarDimensoesVolume(body);
-  }
-
-  @Get('etiqueta/download')
-  @ApiOperation({ summary: 'Baixar Etiquetas' })
-  async downloadEtiqueta(
-    @Query() queryParam: NumeroConferenciaFilter,
-    @Res() reply: FastifyReply,
-  ): Promise<void> {
-    const pdfBuffer = await this.service.downloadEtiqueta(queryParam);
-
-    if (!pdfBuffer) {
-      reply.status(404).send('Nenhuma etiqueta encontrada');
-      return;
-    }
-
-    reply
-      .type('application/pdf')
-      .header(
-        'Content-Disposition',
-        `attachment; filename=etiquetas_conferencia_${queryParam.numeroConferencia}.pdf`,
-      )
-      .send(pdfBuffer);
   }
 
   @Post('gerar-volumes-lote')
