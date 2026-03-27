@@ -11,7 +11,6 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { FastifyReply } from 'fastify';
 import { AuthUserGuard } from 'src/core/guards/auth-user/auth-user.guard';
 import {
-  IniciarConferenciaBody,
   NumeroConferenciaFilter,
   NumeroUnicoFilter,
   PostAtualizarDimensoesVolumeParams,
@@ -26,12 +25,6 @@ import { SeparacaoService } from './separacao.service';
 @Controller('separacoes')
 export class SeparacaoController {
   constructor(private readonly service: SeparacaoService) {}
-
-  @Post('iniciar-conferencia')
-  @ApiOperation({ summary: 'Iniciar Conferência de um Pedido' })
-  postIniciarConferencia(@Body() body: IniciarConferenciaBody) {
-    return this.service.postIniciarConferencia(body);
-  }
 
   @Post('item-conferido-volume')
   @ApiOperation({ summary: 'Iniciar Conferência de um Pedido' })

@@ -1,10 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { SankhyaDBExplorerSPClient } from 'src/http-client/db-explorer-sp/db-explorer-sp.client';
-import { FilaConferenciaFilter } from './dto/conferencia.dto';
+import { ConferenciaHelper } from './conferencia.helper';
+import {
+  FilaConferenciaFilter,
+  IniciarConferenciaBody,
+} from './dto/conferencia.dto';
 
 @Injectable()
 export class ConferenciaService {
-  constructor(private readonly dbExplorerClient: SankhyaDBExplorerSPClient) {}
+  constructor(
+    private readonly dbExplorerClient: SankhyaDBExplorerSPClient,
+    private readonly conferenciaHelper: ConferenciaHelper,
+  ) {}
 
   async getFilaConferencias(queryParams: FilaConferenciaFilter) {
     const conditions: string[] = [];
@@ -173,5 +180,34 @@ export class ConferenciaService {
   `;
     const response = await this.dbExplorerClient.executeQuery(sql);
     return response;
+  }
+
+  async postIniciarConferencia({
+    idUsuario,
+    numeroUnico,
+  }: IniciarConferenciaBody) {
+    await this.conferenciaHelper.verificarStatus({ numeroUnico });
+
+    await this.conferenciaHelper.verificarConferencia({ numeroUnico });
+
+    let numeroConferencia: number =
+      await this.conferenciaHelper.obterNumeroConferencia();
+
+    await this.conferenciaHelper.atualizarNumeroConferencia({
+      numeroConferencia,
+    });
+
+    await this.conferenciaHelper.atualizarCabecalhoConferencia({
+      numeroUnico,
+      numeroConferencia,
+      idUsuario,
+    });
+
+    await this.conferenciaHelper.atualizarCabecalhoNota({
+      numeroUnico,
+      numeroConferencia,
+    });
+
+    return { numeroConferencia };
   }
 }

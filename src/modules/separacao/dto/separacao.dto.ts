@@ -31,20 +31,6 @@ export class IdAndControleProdutoFilter {
   controle: string;
 }
 
-export class IniciarConferenciaBody {
-  @ApiProperty({ example: 1234 })
-  @Type(() => Number)
-  @IsNumber()
-  @IsNotEmpty()
-  idUsuario: number;
-
-  @ApiProperty({ example: 1234 })
-  @Type(() => Number)
-  @IsNumber()
-  @IsNotEmpty()
-  numeroUnico: number;
-}
-
 export class PostRemoverVolumeParams {
   @ApiProperty({ example: 1234 })
   @Type(() => Number)
@@ -57,40 +43,6 @@ export class PostRemoverVolumeParams {
   @IsNumber()
   @IsNotEmpty()
   numeroVolume: number;
-}
-
-export class AtualizarCabecalhoConferenciaParams {
-  @ApiProperty({ example: 1234 })
-  @Type(() => Number)
-  @IsNumber()
-  @IsNotEmpty()
-  numeroUnico: number;
-
-  @ApiProperty({ example: 1234 })
-  @Type(() => Number)
-  @IsNumber()
-  @IsNotEmpty()
-  numeroConferencia: number;
-
-  @ApiProperty({ example: 1234 })
-  @Type(() => Number)
-  @IsNumber()
-  @IsNotEmpty()
-  idUsuario: number;
-}
-
-export class AtualizarCabecalhoNotaParams {
-  @ApiProperty({ example: 1234 })
-  @Type(() => Number)
-  @IsNumber()
-  @IsNotEmpty()
-  numeroUnico: number;
-
-  @ApiProperty({ example: 1234 })
-  @Type(() => Number)
-  @IsNumber()
-  @IsNotEmpty()
-  numeroConferencia: number;
 }
 
 export class PostItemConferidoVolume {

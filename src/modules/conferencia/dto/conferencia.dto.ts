@@ -1,7 +1,11 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiPropertyOptional, IntersectionType } from '@nestjs/swagger';
 import { IsOptional, IsString } from 'class-validator';
+import {
+  IdUsuarioFilter,
+  NumeroConferenciaFilter,
+  NumeroUnicoFilter,
+} from 'src/modules/dto/model';
 
-// Filter
 export class FilaConferenciaFilter {
   @ApiPropertyOptional()
   @IsString()
@@ -58,3 +62,19 @@ export class FilaConferenciaFilter {
   @IsOptional()
   codigoTipoEntrega?: string;
 }
+
+export class IniciarConferenciaBody extends IntersectionType(
+  IdUsuarioFilter,
+  NumeroUnicoFilter,
+) {}
+
+export class AtualizarCabecalhoConferenciaParams extends IntersectionType(
+  NumeroUnicoFilter,
+  NumeroConferenciaFilter,
+  IdUsuarioFilter,
+) {}
+
+export class AtualizarCabecalhoNotaParams extends IntersectionType(
+  NumeroUnicoFilter,
+  NumeroConferenciaFilter,
+) {}
