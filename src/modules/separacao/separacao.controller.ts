@@ -65,12 +65,6 @@ export class SeparacaoController {
     return this.service.salvarDimensoesVolumeLote(body);
   }
 
-  @Get('dados-basicos')
-  @ApiOperation({ summary: 'Dados Básicos do Pedido' })
-  getDadosBasicos(@Query() queryParam: NumeroUnicoFilter) {
-    return this.service.getDadosBasicos(queryParam);
-  }
-
   @Get('itens-pedidos')
   @ApiOperation({ summary: 'Listar Itens Pedidos' })
   getItensPedido(@Query() queryParam: NumeroUnicoFilter) {

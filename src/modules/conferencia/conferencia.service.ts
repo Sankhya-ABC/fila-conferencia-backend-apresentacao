@@ -5,7 +5,7 @@ import {
   FilaConferenciaFilter,
   IniciarConferenciaBody,
 } from './dto/conferencia.dto';
-import { NumeroConferenciaFilter } from '../dto/model';
+import { NumeroConferenciaFilter, NumeroUnicoFilter } from '../dto/model';
 import { SankhyaDatasetSPClient } from 'src/http-client/dataset-sp/dataset-sp.client';
 
 @Injectable()
@@ -183,6 +183,42 @@ export class ConferenciaService {
   `;
     const response = await this.dbExplorerClient.executeQuery(sql);
     return response;
+  }
+
+  async getDadosBasicos({ numeroUnico }: NumeroUnicoFilter) {
+    const sql = `
+      SELECT 
+      CAB.NUNOTA AS numeroUnico, 
+      CAB.NUMNOTA AS numeroNota, 
+      CAB.AD_NUMTALAO AS numeroModial, 
+      CAB.NUCONFATUAL AS numeroConferencia, 
+  
+      sankhya.SNK_GET_SATUSCONFERENCIA(CAB.NUNOTA) AS codigoStatus, 
+      CAB.TIPMOV AS codigoTipoMovimento, 
+      TPO.DESCROPER AS descricaoTipoOperacao, 
+  
+      PAR.CODPARC AS idParceiro, 
+      PAR.RAZAOSOCIAL AS nomeParceiro, 
+  
+      VEN.CODVEND AS idVendedor, 
+      VEN.APELIDO AS nomeVendedor 
+  
+      FROM TGFCAB CAB 
+  
+      LEFT JOIN TGFPAR PAR 
+      ON PAR.CODPARC = CAB.CODPARC 
+  
+      LEFT JOIN TGFVEN VEN 
+      ON VEN.CODVEND = CAB.CODVEND 
+  
+      LEFT JOIN TGFTOP TPO 
+      ON TPO.CODTIPOPER = CAB.CODTIPOPER 
+      AND TPO.DHALTER = CAB.DHTIPOPER 
+  
+      WHERE CAB.NUNOTA = ${numeroUnico} 
+      `;
+    const response = await this.dbExplorerClient.executeQuery(sql);
+    return response?.[0];
   }
 
   async postIniciarConferencia({

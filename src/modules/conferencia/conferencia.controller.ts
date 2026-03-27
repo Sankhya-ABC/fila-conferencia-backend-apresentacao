@@ -6,7 +6,7 @@ import {
   FilaConferenciaFilter,
   IniciarConferenciaBody,
 } from './dto/conferencia.dto';
-import { NumeroConferenciaFilter } from '../dto/model';
+import { NumeroConferenciaFilter, NumeroUnicoFilter } from '../dto/model';
 
 @UseGuards(AuthUserGuard)
 @ApiTags('Conferências')
@@ -19,6 +19,12 @@ export class ConferenciaController {
   @ApiQuery({ type: FilaConferenciaFilter })
   getFilaConferencias(@Query() queryParams: FilaConferenciaFilter) {
     return this.service.getFilaConferencias(queryParams);
+  }
+
+  @Get('dados-basicos')
+  @ApiOperation({ summary: 'Dados Básicos do Pedido' })
+  getDadosBasicos(@Query() queryParam: NumeroUnicoFilter) {
+    return this.service.getDadosBasicos(queryParam);
   }
 
   @Post('iniciar-conferencia')
