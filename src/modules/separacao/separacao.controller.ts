@@ -56,11 +56,6 @@ export class SeparacaoController {
     return this.service.postAtualizarDimensoesVolume(body);
   }
 
-  @Post('finalizar-conferencia')
-  postFinalizarConferencia(@Body() body: NumeroConferenciaFilter) {
-    return this.service.postFinalizarConferencia(body);
-  }
-
   @Get('etiqueta/download')
   @ApiOperation({ summary: 'Baixar Etiquetas' })
   async downloadEtiqueta(

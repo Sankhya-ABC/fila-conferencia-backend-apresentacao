@@ -6,6 +6,7 @@ import {
   FilaConferenciaFilter,
   IniciarConferenciaBody,
 } from './dto/conferencia.dto';
+import { NumeroConferenciaFilter } from '../dto/model';
 
 @UseGuards(AuthUserGuard)
 @ApiTags('Conferências')
@@ -24,5 +25,10 @@ export class ConferenciaController {
   @ApiOperation({ summary: 'Iniciar Conferência de um Pedido' })
   postIniciarConferencia(@Body() body: IniciarConferenciaBody) {
     return this.service.postIniciarConferencia(body);
+  }
+
+  @Post('finalizar-conferencia')
+  postFinalizarConferencia(@Body() body: NumeroConferenciaFilter) {
+    return this.service.postFinalizarConferencia(body);
   }
 }

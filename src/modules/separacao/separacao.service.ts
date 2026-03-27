@@ -233,42 +233,6 @@ export class SeparacaoService {
     });
   }
 
-  async postFinalizarConferencia({
-    numeroConferencia,
-  }: NumeroConferenciaFilter) {
-    const now = new Date();
-    const date = now.toISOString().slice(0, 10).split('-').reverse().join('/');
-    const hour = now.toISOString().slice(11, 16);
-
-    await this.datasetSP.save({
-      entityName: 'CabecalhoConferencia',
-      pk: {
-        NUCONF: numeroConferencia,
-      },
-      fieldsAndValues: {
-        STATUS: 'F',
-        DHFINCONF: `${date} ${hour}`,
-      },
-    });
-
-    const qtdVolumes = await this.dbExplorerClient.executeQuery(`
-      SELECT COUNT(DISTINCT SEQVOL) AS TOTAL
-      FROM TGFIVC
-      WHERE NUCONF = ${numeroConferencia}
-        AND QTD > 0
-    `);
-
-    await this.datasetSP.save({
-      entityName: 'CabecalhoConferencia',
-      pk: {
-        NUCONF: numeroConferencia,
-      },
-      fieldsAndValues: {
-        QTDVOL: qtdVolumes[0].TOTAL,
-      },
-    });
-  }
-
   // gets
   async downloadEtiqueta({
     numeroConferencia,

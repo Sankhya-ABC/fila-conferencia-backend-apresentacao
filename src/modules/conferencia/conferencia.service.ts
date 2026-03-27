@@ -5,12 +5,15 @@ import {
   FilaConferenciaFilter,
   IniciarConferenciaBody,
 } from './dto/conferencia.dto';
+import { NumeroConferenciaFilter } from '../dto/model';
+import { SankhyaDatasetSPClient } from 'src/http-client/dataset-sp/dataset-sp.client';
 
 @Injectable()
 export class ConferenciaService {
   constructor(
     private readonly dbExplorerClient: SankhyaDBExplorerSPClient,
     private readonly conferenciaHelper: ConferenciaHelper,
+    private readonly datasetSP: SankhyaDatasetSPClient,
   ) {}
 
   async getFilaConferencias(queryParams: FilaConferenciaFilter) {
@@ -209,5 +212,32 @@ export class ConferenciaService {
     });
 
     return { numeroConferencia };
+  }
+
+  async postFinalizarConferencia({
+    numeroConferencia,
+  }: NumeroConferenciaFilter) {
+    const now = new Date();
+    const date = now.toISOString().slice(0, 10).split('-').reverse().join('/');
+    const hour = now.toISOString().slice(11, 16);
+
+    const qtdVolumes = await this.dbExplorerClient.executeQuery(`
+        SELECT COUNT(DISTINCT SEQVOL) AS TOTAL
+        FROM TGFIVC
+        WHERE NUCONF = ${numeroConferencia}
+          AND QTD > 0
+      `);
+
+    await this.datasetSP.save({
+      entityName: 'CabecalhoConferencia',
+      pk: {
+        NUCONF: numeroConferencia,
+      },
+      fieldsAndValues: {
+        STATUS: 'F',
+        DHFINCONF: `${date} ${hour}`,
+        QTDVOL: qtdVolumes[0].TOTAL,
+      },
+    });
   }
 }
