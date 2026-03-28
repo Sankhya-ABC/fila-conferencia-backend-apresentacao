@@ -3,21 +3,6 @@ import { Type } from 'class-transformer';
 import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
 // Filter
-export class NumeroUnicoFilter {
-  @ApiProperty({ example: 1234 })
-  @Type(() => Number)
-  @IsNumber()
-  @IsNotEmpty()
-  numeroUnico: number;
-}
-
-export class NumeroConferenciaFilter {
-  @ApiProperty({ example: 1234 })
-  @Type(() => Number)
-  @IsNumber()
-  @IsNotEmpty()
-  numeroConferencia: number;
-}
 
 export class IdAndControleProdutoFilter {
   @ApiProperty({ example: '1234' })
@@ -143,8 +128,3 @@ export class PostAtualizarDimensoesVolumeParams {
   @IsOptional()
   peso?: number;
 }
-
-export type CacheItem = {
-  value: string | null;
-  expiresAt: number;
-};

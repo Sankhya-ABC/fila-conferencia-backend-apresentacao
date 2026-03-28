@@ -2,14 +2,13 @@ import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthUserGuard } from 'src/core/guards/auth-user/auth-user.guard';
 import {
-  NumeroConferenciaFilter,
-  NumeroUnicoFilter,
   PostAtualizarDimensoesVolumeParams,
   PostDevolverItemConferido,
   PostItemConferidoVolume,
   PostRemoverVolumeParams,
 } from './dto/separacao.dto';
 import { SeparacaoService } from './separacao.service';
+import { NumeroConferenciaFilter, NumeroUnicoFilter } from '../dto/model';
 
 @UseGuards(AuthUserGuard)
 @ApiTags('Separacoes')
@@ -75,11 +74,5 @@ export class SeparacaoController {
   @ApiOperation({ summary: 'Listar Itens Conferidos' })
   getItensConferidos(@Query() queryParam: NumeroConferenciaFilter) {
     return this.service.getItensConferidos(queryParam);
-  }
-
-  @Get('volumes')
-  @ApiOperation({ summary: 'Listar Volumes' })
-  getVolumes(@Query() queryParam: NumeroConferenciaFilter) {
-    return this.service.getVolumes(queryParam);
   }
 }

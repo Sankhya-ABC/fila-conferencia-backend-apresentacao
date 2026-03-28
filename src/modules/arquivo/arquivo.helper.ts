@@ -1,10 +1,12 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { SankhyaDBExplorerSPClient } from 'src/http-client/db-explorer-sp/db-explorer-sp.client';
 import { NumeroConferenciaFilter } from '../dto/model';
+import { CacheItem } from './dto/arquivo.model';
 
 @Injectable()
 export class ArquivoHelper {
   constructor(private readonly dbExplorerClient: SankhyaDBExplorerSPClient) {}
+  private imagemCache = new Map<number, CacheItem>();
 
   async isCubagemNaoDetalhada({ numeroConferencia }: NumeroConferenciaFilter) {
     try {
@@ -36,6 +38,34 @@ export class ArquivoHelper {
         'Erro ao obter informações da conferência.',
       );
     }
+  }
+
+  async obterImagemProduto(idProduto: number) {
+    const cache = this.imagemCache.get(idProduto);
+
+    if (cache && cache.expiresAt > Date.now()) {
+      return cache.value;
+    }
+
+    const response = await this.dbExplorerClient.executeQuery(`
+    SELECT IMAGEM
+    FROM TGFPRO
+    WHERE CODPROD = ${idProduto};
+  `);
+
+    let imagem = response?.[0]?.IMAGEM || null;
+
+    if (imagem) {
+      imagem = Buffer.from(imagem, 'hex').toString('base64');
+    }
+
+    const MINUTOS = 60 * 3;
+    this.imagemCache.set(idProduto, {
+      value: imagem,
+      expiresAt: Date.now() + 1000 * 60 * MINUTOS,
+    });
+
+    return imagem;
   }
 
   async obterCubagemNaoDetalhada({

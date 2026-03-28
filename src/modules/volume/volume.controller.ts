@@ -1,0 +1,18 @@
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { AuthUserGuard } from 'src/core/guards/auth-user/auth-user.guard';
+import { NumeroConferenciaFilter } from '../dto/model';
+import { VolumeService } from './volume.service';
+
+@UseGuards(AuthUserGuard)
+@ApiTags('Volumes')
+@Controller('volumes')
+export class VolumeController {
+  constructor(private readonly service: VolumeService) {}
+
+  @Get('')
+  @ApiOperation({ summary: 'Listar Volumes' })
+  getVolumes(@Query() queryParam: NumeroConferenciaFilter) {
+    return this.service.getVolumes(queryParam);
+  }
+}
