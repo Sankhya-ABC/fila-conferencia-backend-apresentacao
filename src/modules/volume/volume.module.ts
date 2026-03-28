@@ -8,10 +8,11 @@ import { AuthUserModule } from 'src/core/guards/auth-user/auth-user.module';
 import { SankhyaDatasetSPClientModule } from 'src/http-client/dataset-sp/dataset-sp.module';
 import { VolumeHelper } from './volume.helper';
 import { ArquivoHelper } from '../arquivo/arquivo.helper';
+import { SeparacaoHelper } from '../separacao/separacao.helper';
 
 @Module({
   controllers: [VolumeController],
-  providers: [VolumeService, VolumeHelper, ArquivoHelper],
+  providers: [VolumeService, VolumeHelper, ArquivoHelper, SeparacaoHelper],
   imports: [
     GatewayClientModule,
     AuthAppModule,

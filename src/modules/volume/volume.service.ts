@@ -8,11 +8,13 @@ import {
   GerarVolumesLoteParams,
   PostAtualizarDimensoesVolumeParams,
 } from './dto/volume.dto';
+import { SeparacaoHelper } from '../separacao/separacao.helper';
 
 @Injectable()
 export class VolumeService {
   constructor(
     private readonly volumeHelper: VolumeHelper,
+    private readonly separacaoHelper: SeparacaoHelper,
     private readonly dbExplorerClient: SankhyaDBExplorerSPClient,
     private readonly datasetSP: SankhyaDatasetSPClient,
   ) {}
@@ -27,6 +29,8 @@ export class VolumeService {
         numeroConferencia,
       });
     } else {
+      await this.separacaoHelper.normalizarVolumes(numeroConferencia);
+
       return await this.volumeHelper.obterVolumesDetalhados({
         numeroConferencia,
       });
