@@ -2,7 +2,7 @@ import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthUserGuard } from 'src/core/guards/auth-user/auth-user.guard';
 import {
-  PostAtualizarDimensoesVolumeParams,
+  PostAtualizarDimensoesVolumeDetalhadoParams,
   PostDevolverItemConferido,
   PostItemConferidoVolume,
   PostRemoverVolumeParams,
@@ -40,10 +40,10 @@ export class SeparacaoController {
   }
 
   @Post('dimensoes-volume')
-  postAtualizarDimensoesVolume(
-    @Body() body: PostAtualizarDimensoesVolumeParams,
+  postAtualizarDimensoesVolumeDetalhado(
+    @Body() body: PostAtualizarDimensoesVolumeDetalhadoParams,
   ) {
-    return this.service.postAtualizarDimensoesVolume(body);
+    return this.service.postAtualizarDimensoesVolumeDetalhado(body);
   }
 
   @Post('deletar-volume-lote')
@@ -54,8 +54,8 @@ export class SeparacaoController {
 
   @Post('dimensoes-volume-lote')
   @ApiOperation({ summary: 'Atualizar dimensões de lote de volumes' })
-  postAtualizarDimensoesVolumeLote(@Body() body: any) {
-    return this.service.salvarDimensoesVolumeLote(body);
+  postAtualizarDimensoesVolumeNaoDetalhadoLote(@Body() body: any) {
+    return this.service.postAtualizarDimensoesVolumeNaoDetalhadoLote(body);
   }
 
   @Get('itens-pedidos')

@@ -91,7 +91,7 @@ export class PostDevolverItemConferido {
   controle: string;
 }
 
-export class PostAtualizarDimensoesVolumeParams {
+export class PostAtualizarDimensoesVolumeDetalhadoParams {
   @ApiProperty({ example: 1234 })
   @Type(() => Number)
   @IsNumber()
@@ -127,4 +127,30 @@ export class PostAtualizarDimensoesVolumeParams {
   @IsNumber()
   @IsOptional()
   peso?: number;
+}
+
+export class PostAtualizarDimensoesVolumeNaoDetalhadoLoteParams extends PostAtualizarDimensoesVolumeDetalhadoParams {
+  @ApiProperty({ example: 1234 })
+  @Type(() => Number)
+  @IsNumber()
+  @IsOptional()
+  alturaAntiga?: number;
+
+  @ApiProperty({ example: 1234 })
+  @Type(() => Number)
+  @IsNumber()
+  @IsOptional()
+  larguraAntiga?: number;
+
+  @ApiProperty({ example: 1234 })
+  @Type(() => Number)
+  @IsNumber()
+  @IsOptional()
+  comprimentoAntigo?: number;
+
+  @ApiProperty({ example: 1234 })
+  @Type(() => Number)
+  @IsNumber()
+  @IsOptional()
+  pesoAntigo?: number;
 }

@@ -2,12 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { SankhyaDatasetSPClient } from 'src/http-client/dataset-sp/dataset-sp.client';
 import { SankhyaDBExplorerSPClient } from 'src/http-client/db-explorer-sp/db-explorer-sp.client';
 import { ArquivoHelper } from '../arquivo/arquivo.helper';
+import { NumeroConferenciaFilter, NumeroUnicoFilter } from '../dto/model';
 import {
   IdAndControleProdutoFilter,
-  PostAtualizarDimensoesVolumeParams,
+  PostAtualizarDimensoesVolumeDetalhadoParams,
+  PostAtualizarDimensoesVolumeNaoDetalhadoLoteParams,
   PostItemConferidoVolume,
 } from './dto/separacao.dto';
-import { NumeroConferenciaFilter, NumeroUnicoFilter } from '../dto/model';
 
 @Injectable()
 export class SeparacaoService {
@@ -171,14 +172,14 @@ export class SeparacaoService {
     await this.normalizarVolumes(numeroConferencia);
   }
 
-  async postAtualizarDimensoesVolume({
+  async postAtualizarDimensoesVolumeDetalhado({
     numeroConferencia,
     numeroVolume,
     largura,
     comprimento,
     altura,
     peso,
-  }: PostAtualizarDimensoesVolumeParams) {
+  }: PostAtualizarDimensoesVolumeDetalhadoParams) {
     const existente = await this.dbExplorerClient.executeQuery(`
     SELECT NUCUBAGEM
     FROM AD_CUBAGEM
@@ -365,7 +366,7 @@ export class SeparacaoService {
     }
   }
 
-  async salvarDimensoesVolumeLote({
+  async postAtualizarDimensoesVolumeNaoDetalhadoLote({
     numeroConferencia,
     alturaAntiga,
     larguraAntiga,
@@ -375,7 +376,7 @@ export class SeparacaoService {
     largura,
     comprimento,
     peso,
-  }) {
+  }: PostAtualizarDimensoesVolumeNaoDetalhadoLoteParams) {
     const sql = `
     SELECT NUCUBAGEM
     FROM AD_CUBAGEM
