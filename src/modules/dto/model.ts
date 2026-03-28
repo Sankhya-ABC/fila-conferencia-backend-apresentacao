@@ -1,6 +1,6 @@
 import { ApiProperty, IntersectionType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsNotEmpty, IsNumber } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class NumeroUnicoFilter {
   @ApiProperty({ example: 1234 })
@@ -24,4 +24,19 @@ export class IdUsuarioFilter {
   @IsNumber()
   @IsNotEmpty()
   idUsuario: number;
+}
+
+export class IDProdutoFilter {
+  @ApiProperty({ example: 1234 })
+  @Type(() => Number)
+  @IsNumber()
+  @IsNotEmpty()
+  idProduto: number;
+}
+
+export class ControleFilter {
+  @ApiProperty({ example: 'Azul' })
+  @IsString()
+  @IsNotEmpty()
+  controle: string;
 }

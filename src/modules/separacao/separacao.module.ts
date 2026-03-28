@@ -7,10 +7,11 @@ import { GatewayClientModule } from 'src/http-client/gateway/gateway.module';
 import { ArquivoHelper } from '../arquivo/arquivo.helper';
 import { SeparacaoController } from './separacao.controller';
 import { SeparacaoService } from './separacao.service';
+import { SeparacaoHelper } from './separacao.helper';
 
 @Module({
   controllers: [SeparacaoController],
-  providers: [SeparacaoService, ArquivoHelper],
+  providers: [SeparacaoService, ArquivoHelper, SeparacaoHelper],
   imports: [
     GatewayClientModule,
     AuthAppModule,
