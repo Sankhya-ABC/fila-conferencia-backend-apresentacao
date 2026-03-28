@@ -330,82 +330,6 @@ export class SeparacaoService {
     return response;
   }
 
-  async gerarVolumesLote({
-    numeroConferencia,
-    quantidadeLote,
-    altura,
-    largura,
-    comprimento,
-    peso,
-  }) {
-    const sql = `
-    SELECT
-      NUCUBAGEM,
-      SEQVOL,
-      ALTURA,
-      LARGURA,
-      COMPRIMENTO,
-      PESO
-    FROM AD_CUBAGEM
-    WHERE NUCONF = ${numeroConferencia}
-    ORDER BY SEQVOL
-  `;
-
-    const rows = await this.dbExplorerClient.executeQuery(sql);
-
-    const linhasVazias = rows.filter(
-      (r) =>
-        r.ALTURA == null &&
-        r.LARGURA == null &&
-        r.COMPRIMENTO == null &&
-        r.PESO == null,
-    );
-
-    let numeroVolume = rows.length
-      ? Math.max(...rows.map((r) => r.SEQVOL || 0)) + 1
-      : 1;
-
-    let restante = quantidadeLote;
-
-    for (const linha of linhasVazias) {
-      if (restante <= 0) break;
-
-      await this.datasetSP.save({
-        entityName: 'AD_CUBAGEM',
-        pk: {
-          NUCUBAGEM: linha.NUCUBAGEM,
-        },
-        fieldsAndValues: {
-          ALTURA: Number(altura),
-          LARGURA: Number(largura),
-          COMPRIMENTO: Number(comprimento),
-          PESO: Number(peso),
-        },
-      });
-
-      restante--;
-    }
-
-    while (restante > 0) {
-      const nucubagem = await this.obterProximoIdCubagem();
-
-      await this.datasetSP.save({
-        entityName: 'AD_CUBAGEM',
-        fieldsAndValues: {
-          NUCUBAGEM: nucubagem,
-          NUCONF: numeroConferencia,
-          SEQVOL: numeroVolume++,
-          ALTURA: Number(altura),
-          LARGURA: Number(largura),
-          COMPRIMENTO: Number(comprimento),
-          PESO: Number(peso),
-        },
-      });
-
-      restante--;
-    }
-  }
-
   async deletarVolumeLote({
     numeroConferencia,
     altura,
@@ -916,16 +840,5 @@ export class SeparacaoService {
         },
       });
     }
-  }
-
-  async obterProximoIdCubagem() {
-    const sql = `
-    SELECT COALESCE(MAX(NUCUBAGEM), 0) + 1 AS NUCUBAGEM
-    FROM AD_CUBAGEM
-  `;
-
-    const rows = await this.dbExplorerClient.executeQuery(sql);
-
-    return rows?.[0]?.NUCUBAGEM;
   }
 }

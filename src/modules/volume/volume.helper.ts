@@ -199,4 +199,15 @@ export class VolumeHelper {
 
     return Array.from(volumeMap.values());
   }
+
+  async obterProximoIdCubagem() {
+    const sql = `
+    SELECT COALESCE(MAX(NUCUBAGEM), 0) + 1 AS NUCUBAGEM
+    FROM AD_CUBAGEM
+  `;
+
+    const rows = await this.dbExplorerClient.executeQuery(sql);
+
+    return rows?.[0]?.NUCUBAGEM;
+  }
 }

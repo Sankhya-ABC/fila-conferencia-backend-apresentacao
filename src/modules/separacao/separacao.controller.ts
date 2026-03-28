@@ -46,12 +46,6 @@ export class SeparacaoController {
     return this.service.postAtualizarDimensoesVolume(body);
   }
 
-  @Post('gerar-volumes-lote')
-  @ApiOperation({ summary: 'Gerar volumes em lote' })
-  postGerarVolumesLote(@Body() body: any) {
-    return this.service.gerarVolumesLote(body);
-  }
-
   @Post('deletar-volume-lote')
   @ApiOperation({ summary: 'Deletar volume lote' })
   postDeletarVolumeLote(@Body() body: any) {

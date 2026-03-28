@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthUserGuard } from 'src/core/guards/auth-user/auth-user.guard';
 import { NumeroConferenciaFilter } from '../dto/model';
@@ -14,5 +14,11 @@ export class VolumeController {
   @ApiOperation({ summary: 'Listar Volumes' })
   getVolumes(@Query() queryParam: NumeroConferenciaFilter) {
     return this.service.getVolumes(queryParam);
+  }
+
+  @Post('gerar-volumes-lote')
+  @ApiOperation({ summary: 'Gerar volumes em lote' })
+  postGerarVolumesLote(@Body() body: any) {
+    return this.service.gerarVolumesLote(body);
   }
 }
