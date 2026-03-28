@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, OmitType, PartialType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
 
@@ -40,7 +40,16 @@ export class PostAtualizarDimensoesVolumeDetalhadoParams {
   peso?: number;
 }
 
-export class PostAtualizarDimensoesVolumeNaoDetalhadoLoteParams extends PostAtualizarDimensoesVolumeDetalhadoParams {
+export class PostAtualizarDimensoesVolumeNaoDetalhadoLoteParams extends OmitType(
+  PostAtualizarDimensoesVolumeDetalhadoParams,
+  ['numeroVolume'],
+) {
+  @ApiProperty({ example: 1234 })
+  @Type(() => Number)
+  @IsNumber()
+  @IsOptional()
+  numeroVolume: number;
+
   @ApiProperty({ example: 1234 })
   @Type(() => Number)
   @IsNumber()
@@ -65,3 +74,5 @@ export class PostAtualizarDimensoesVolumeNaoDetalhadoLoteParams extends PostAtua
   @IsOptional()
   pesoAntigo?: number;
 }
+
+export class PostAtualizarDimensoesVolumeParams extends PostAtualizarDimensoesVolumeNaoDetalhadoLoteParams {}
