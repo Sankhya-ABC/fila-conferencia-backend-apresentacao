@@ -1,10 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { SankhyaDBExplorerSPClient } from 'src/http-client/db-explorer-sp/db-explorer-sp.client';
-import { FilaConferenciaFilter } from './dto/conferencia.dto';
+import { ConferenciaHelper } from './conferencia.helper';
+import {
+  FilaConferenciaFilter,
+  IniciarConferenciaBody,
+} from './dto/conferencia.dto';
+import { NumeroConferenciaFilter, NumeroUnicoFilter } from '../dto/model';
+import { SankhyaDatasetSPClient } from 'src/http-client/dataset-sp/dataset-sp.client';
 
 @Injectable()
 export class ConferenciaService {
-  constructor(private readonly dbExplorerClient: SankhyaDBExplorerSPClient) {}
+  constructor(
+    private readonly dbExplorerClient: SankhyaDBExplorerSPClient,
+    private readonly conferenciaHelper: ConferenciaHelper,
+    private readonly datasetSP: SankhyaDatasetSPClient,
+  ) {}
 
   async getFilaConferencias(queryParams: FilaConferenciaFilter) {
     const conditions: string[] = [];
@@ -173,5 +183,97 @@ export class ConferenciaService {
   `;
     const response = await this.dbExplorerClient.executeQuery(sql);
     return response;
+  }
+
+  async getDadosBasicos({ numeroUnico }: NumeroUnicoFilter) {
+    const sql = `
+      SELECT 
+      CAB.NUNOTA AS numeroUnico, 
+      CAB.NUMNOTA AS numeroNota, 
+      CAB.AD_NUMTALAO AS numeroModial, 
+      CAB.NUCONFATUAL AS numeroConferencia, 
+  
+      sankhya.SNK_GET_SATUSCONFERENCIA(CAB.NUNOTA) AS codigoStatus, 
+      CAB.TIPMOV AS codigoTipoMovimento, 
+      TPO.DESCROPER AS descricaoTipoOperacao, 
+  
+      PAR.CODPARC AS idParceiro, 
+      PAR.RAZAOSOCIAL AS nomeParceiro, 
+  
+      VEN.CODVEND AS idVendedor, 
+      VEN.APELIDO AS nomeVendedor 
+  
+      FROM TGFCAB CAB 
+  
+      LEFT JOIN TGFPAR PAR 
+      ON PAR.CODPARC = CAB.CODPARC 
+  
+      LEFT JOIN TGFVEN VEN 
+      ON VEN.CODVEND = CAB.CODVEND 
+  
+      LEFT JOIN TGFTOP TPO 
+      ON TPO.CODTIPOPER = CAB.CODTIPOPER 
+      AND TPO.DHALTER = CAB.DHTIPOPER 
+  
+      WHERE CAB.NUNOTA = ${numeroUnico} 
+      `;
+    const response = await this.dbExplorerClient.executeQuery(sql);
+    return response?.[0];
+  }
+
+  async postIniciarConferencia({
+    idUsuario,
+    numeroUnico,
+  }: IniciarConferenciaBody) {
+    await this.conferenciaHelper.verificarStatus({ numeroUnico });
+
+    await this.conferenciaHelper.verificarConferencia({ numeroUnico });
+
+    let numeroConferencia: number =
+      await this.conferenciaHelper.obterNumeroConferencia();
+
+    await this.conferenciaHelper.atualizarNumeroConferencia({
+      numeroConferencia,
+    });
+
+    await this.conferenciaHelper.atualizarCabecalhoConferencia({
+      numeroUnico,
+      numeroConferencia,
+      idUsuario,
+    });
+
+    await this.conferenciaHelper.atualizarCabecalhoNota({
+      numeroUnico,
+      numeroConferencia,
+    });
+
+    return { numeroConferencia };
+  }
+
+  async postFinalizarConferencia({
+    numeroConferencia,
+  }: NumeroConferenciaFilter) {
+    const now = new Date();
+    const date = now.toISOString().slice(0, 10).split('-').reverse().join('/');
+    const hour = now.toISOString().slice(11, 16);
+
+    const qtdVolumes = await this.dbExplorerClient.executeQuery(`
+        SELECT COUNT(DISTINCT SEQVOL) AS TOTAL
+        FROM TGFIVC
+        WHERE NUCONF = ${numeroConferencia}
+          AND QTD > 0
+      `);
+
+    await this.datasetSP.save({
+      entityName: 'CabecalhoConferencia',
+      pk: {
+        NUCONF: numeroConferencia,
+      },
+      fieldsAndValues: {
+        STATUS: 'F',
+        DHFINCONF: `${date} ${hour}`,
+        QTDVOL: qtdVolumes[0].TOTAL,
+      },
+    });
   }
 }

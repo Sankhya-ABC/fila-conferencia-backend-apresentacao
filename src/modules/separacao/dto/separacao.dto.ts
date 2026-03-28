@@ -1,49 +1,7 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, IntersectionType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
-
-// Filter
-export class NumeroUnicoFilter {
-  @ApiProperty({ example: 1234 })
-  @Type(() => Number)
-  @IsNumber()
-  @IsNotEmpty()
-  numeroUnico: number;
-}
-
-export class NumeroConferenciaFilter {
-  @ApiProperty({ example: 1234 })
-  @Type(() => Number)
-  @IsNumber()
-  @IsNotEmpty()
-  numeroConferencia: number;
-}
-
-export class IdAndControleProdutoFilter {
-  @ApiProperty({ example: '1234' })
-  @IsString()
-  @IsNotEmpty()
-  idProduto: string;
-
-  @ApiProperty({ example: 'Azul' })
-  @IsString()
-  @IsNotEmpty()
-  controle: string;
-}
-
-export class IniciarConferenciaBody {
-  @ApiProperty({ example: 1234 })
-  @Type(() => Number)
-  @IsNumber()
-  @IsNotEmpty()
-  idUsuario: number;
-
-  @ApiProperty({ example: 1234 })
-  @Type(() => Number)
-  @IsNumber()
-  @IsNotEmpty()
-  numeroUnico: number;
-}
+import { ControleFilter, IDProdutoFilter } from 'src/modules/dto/model';
 
 export class PostRemoverVolumeParams {
   @ApiProperty({ example: 1234 })
@@ -59,39 +17,7 @@ export class PostRemoverVolumeParams {
   numeroVolume: number;
 }
 
-export class AtualizarCabecalhoConferenciaParams {
-  @ApiProperty({ example: 1234 })
-  @Type(() => Number)
-  @IsNumber()
-  @IsNotEmpty()
-  numeroUnico: number;
-
-  @ApiProperty({ example: 1234 })
-  @Type(() => Number)
-  @IsNumber()
-  @IsNotEmpty()
-  numeroConferencia: number;
-
-  @ApiProperty({ example: 1234 })
-  @Type(() => Number)
-  @IsNumber()
-  @IsNotEmpty()
-  idUsuario: number;
-}
-
-export class AtualizarCabecalhoNotaParams {
-  @ApiProperty({ example: 1234 })
-  @Type(() => Number)
-  @IsNumber()
-  @IsNotEmpty()
-  numeroUnico: number;
-
-  @ApiProperty({ example: 1234 })
-  @Type(() => Number)
-  @IsNumber()
-  @IsNotEmpty()
-  numeroConferencia: number;
-}
+export class GarantirVolumeParams extends PostRemoverVolumeParams {}
 
 export class PostItemConferidoVolume {
   @ApiProperty({ example: 1234 })
@@ -154,45 +80,39 @@ export class PostDevolverItemConferido {
   controle: string;
 }
 
-export class PostAtualizarDimensoesVolumeParams {
+export class CodigosDeBarraParams extends IntersectionType(
+  IDProdutoFilter,
+  ControleFilter,
+) {}
+
+export class VerificarItemConferidoVolumeParams extends IntersectionType(
+  GarantirVolumeParams,
+  CodigosDeBarraParams,
+) {}
+
+export class AtualizarItemConferidoVolumeParams extends PostRemoverVolumeParams {
   @ApiProperty({ example: 1234 })
   @Type(() => Number)
   @IsNumber()
   @IsNotEmpty()
-  numeroConferencia: number;
+  seqItem: number;
 
   @ApiProperty({ example: 1234 })
   @Type(() => Number)
   @IsNumber()
   @IsNotEmpty()
-  numeroVolume: number;
-
-  @ApiProperty({ example: 1234 })
-  @Type(() => Number)
-  @IsNumber()
-  @IsOptional()
-  largura?: number;
-
-  @ApiProperty({ example: 1234 })
-  @Type(() => Number)
-  @IsNumber()
-  @IsOptional()
-  comprimento?: number;
-
-  @ApiProperty({ example: 1234 })
-  @Type(() => Number)
-  @IsNumber()
-  @IsOptional()
-  altura?: number;
-
-  @ApiProperty({ example: 1234 })
-  @Type(() => Number)
-  @IsNumber()
-  @IsOptional()
-  peso?: number;
+  quantidadeConvertida: number;
 }
 
-export type CacheItem = {
-  value: string | null;
-  expiresAt: number;
-};
+export class InserirItemConferidoVolumeParams extends VerificarItemConferidoVolumeParams {
+  @ApiProperty({ example: 1234 })
+  @Type(() => Number)
+  @IsNumber()
+  @IsNotEmpty()
+  quantidadeConvertida: number;
+
+  @ApiProperty({ example: 'UN' })
+  @IsString()
+  @IsNotEmpty()
+  unidade: string;
+}

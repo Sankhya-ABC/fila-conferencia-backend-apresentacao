@@ -2,15 +2,17 @@ import { Module } from '@nestjs/common';
 import { AuthAppModule } from 'src/core/guards/auth-app/auth-app.module';
 import { SankhyaDBExplorerSPClientModule } from 'src/http-client/db-explorer-sp/db-explorer-sp.module';
 import { GatewayClientModule } from 'src/http-client/gateway/gateway.module';
-import { ConferenciaController } from './conferencia.controller';
-import { ConferenciaService } from './conferencia.service';
+import { VolumeController } from './volume.controller';
+import { VolumeService } from './volume.service';
 import { AuthUserModule } from 'src/core/guards/auth-user/auth-user.module';
 import { SankhyaDatasetSPClientModule } from 'src/http-client/dataset-sp/dataset-sp.module';
-import { ConferenciaHelper } from './conferencia.helper';
+import { VolumeHelper } from './volume.helper';
+import { ArquivoHelper } from '../arquivo/arquivo.helper';
+import { SeparacaoHelper } from '../separacao/separacao.helper';
 
 @Module({
-  controllers: [ConferenciaController],
-  providers: [ConferenciaService, ConferenciaHelper],
+  controllers: [VolumeController],
+  providers: [VolumeService, VolumeHelper, ArquivoHelper, SeparacaoHelper],
   imports: [
     GatewayClientModule,
     AuthAppModule,
@@ -19,4 +21,4 @@ import { ConferenciaHelper } from './conferencia.helper';
     SankhyaDatasetSPClientModule,
   ],
 })
-export class ConferenciaModule {}
+export class VolumeModule {}

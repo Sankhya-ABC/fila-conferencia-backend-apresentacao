@@ -14,6 +14,8 @@ import { SeparacaoModule } from './modules/separacao/separacao.module';
 import { DominioModule } from './modules/dominio/dominio.module';
 import { LoggerModule } from './core/logger/logger.module';
 import { LoggerInterceptor } from './core/logger/logger.interceptor';
+import { ArquivoModule } from './modules/arquivo/arquivo.module';
+import { VolumeModule } from './modules/volume/volume.module';
 
 @Module({
   imports: [
@@ -23,6 +25,8 @@ import { LoggerInterceptor } from './core/logger/logger.interceptor';
     ParceiroModule,
     EmpresaModule,
     SeparacaoModule,
+    ArquivoModule,
+    VolumeModule,
     AuthModule,
     LoggerModule,
     ConfigModule.forRoot({
