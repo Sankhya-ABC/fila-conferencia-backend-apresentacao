@@ -97,6 +97,7 @@ export class SeparacaoHelper {
       },
       fieldsAndValues: {
         QTD: quantidadeConvertida,
+        QTDVOLPAD: quantidadeConvertida,
       },
     });
   }
@@ -140,6 +141,7 @@ export class SeparacaoHelper {
           CODPROD: idProduto,
           CONTROLE: controle,
           QTD: quantidadeConvertida,
+          QTDVOLPAD: quantidadeConvertida,
           CODVOL: unidade,
         },
       });
@@ -163,6 +165,7 @@ export class SeparacaoHelper {
         CODPROD: idProduto,
         CONTROLE: controle,
         QTD: quantidadeConvertida,
+        QTDVOLPAD: quantidadeConvertida,
         CODVOL: unidade,
       },
     });
@@ -220,6 +223,7 @@ export class SeparacaoHelper {
             },
             fieldsAndValues: {
               QTD: Number(existente[0].QTD || 0) + Number(item.QTD || 0),
+              QTDVOLPAD: Number(existente[0].QTD || 0) + Number(item.QTD || 0),
             },
           });
         } else {
@@ -245,6 +249,7 @@ export class SeparacaoHelper {
               CODPROD: item.CODPROD,
               CONTROLE: controleNormalizado,
               QTD: item.QTD,
+              QTDVOLPAD: item.QTD,
               CODVOL: item.CODVOL,
             },
           };
@@ -271,6 +276,7 @@ export class SeparacaoHelper {
             CODPROD: null,
             CONTROLE: null,
             QTD: null,
+            QTDVOLPAD: null,
             CODVOL: null,
           },
         });
@@ -355,77 +361,58 @@ export class SeparacaoHelper {
     WHERE NUCONF = ${numeroConferencia}
   `);
 
-    for (const antigo of existentes) {
-      await this.datasetSP.save({
-        entityName: 'DetalhesConferencia',
-        pk: {
-          NUCONF: numeroConferencia,
-          SEQCONF: antigo.SEQCONF,
-        },
-        fieldsAndValues: {
-          QTDCONFVOLPAD: null,
-        },
-      });
-    }
-
     const usados = new Set<number>();
 
     for (const item of itens) {
-      let fator = 1;
+      try {
+        let seq = existentes.find(
+          (e) =>
+            e.CODPROD === item.CODPROD && (e.CONTROLE ?? ' ') === item.CONTROLE,
+        )?.SEQCONF;
 
-      if (item.QTDNEG && item.QTDNEG !== 0) {
-        fator = item.QTDCONFERIDA / item.QTDNEG;
-      }
-
-      const qtdBase = Number((item.QTD_CONFERIDA * fator).toFixed(5));
-
-      let seq = existentes.find(
-        (e) =>
-          e.CODPROD === item.CODPROD && (e.CONTROLE ?? ' ') === item.CONTROLE,
-      )?.SEQCONF;
-
-      if (!seq) {
-        const seqLivre = await this.dbExplorerClient.executeQuery(`
-        SELECT MIN(SEQCONF) AS SEQCONF
-        FROM TGFCOI2
-        WHERE NUCONF = ${numeroConferencia}
-          AND CODPROD IS NULL
-      `);
-
-        const seqLivreValor = seqLivre?.[0]?.SEQCONF;
-
-        if (seqLivreValor) {
-          seq = seqLivreValor;
-        } else {
-          const prox = await this.dbExplorerClient.executeQuery(`
-          SELECT COALESCE(MAX(SEQCONF),0) + 1 AS SEQCONF
+        if (!seq) {
+          const seqLivre = await this.dbExplorerClient.executeQuery(`
+          SELECT MIN(SEQCONF) AS SEQCONF
           FROM TGFCOI2
           WHERE NUCONF = ${numeroConferencia}
+            AND CODPROD IS NULL
         `);
 
-          seq = prox[0].SEQCONF;
+          const seqLivreValor = seqLivre?.[0]?.SEQCONF;
+
+          if (seqLivreValor) {
+            seq = seqLivreValor;
+          } else {
+            const prox = await this.dbExplorerClient.executeQuery(`
+            SELECT COALESCE(MAX(SEQCONF),0) + 1 AS SEQCONF
+            FROM TGFCOI2
+            WHERE NUCONF = ${numeroConferencia}
+          `);
+
+            seq = prox[0].SEQCONF;
+          }
         }
-      }
 
-      usados.add(seq);
+        usados.add(seq);
 
-      await this.datasetSP.save({
-        entityName: 'DetalhesConferencia',
-        pk: {
-          NUCONF: numeroConferencia,
-          SEQCONF: seq,
-        },
-        fieldsAndValues: {
-          CODPROD: item.CODPROD,
-          CODBARRA: item.CODPROD,
-          CODVOL: null,
-          CONTROLE: item.CONTROLE,
-          QTDCONF: qtdBase,
-          QTDCONFVOLPAD: qtdBase,
-          COPIA: null,
-          DHALTER: dh,
-        },
-      });
+        await this.datasetSP.save({
+          entityName: 'DetalhesConferencia',
+          pk: {
+            NUCONF: numeroConferencia,
+            SEQCONF: seq,
+          },
+          fieldsAndValues: {
+            CODPROD: item.CODPROD,
+            CODBARRA: item.CODPROD,
+            CODVOL: null,
+            CONTROLE: item.CONTROLE,
+            QTDCONF: item.QTD_CONFERIDA,
+            QTDCONFVOLPAD: item.QTD_CONFERIDA,
+            COPIA: null,
+            DHALTER: dh,
+          },
+        });
+      } catch (error) {}
     }
   }
 }
