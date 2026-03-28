@@ -5,7 +5,6 @@ import { ArquivoHelper } from '../arquivo/arquivo.helper';
 import { NumeroConferenciaFilter, NumeroUnicoFilter } from '../dto/model';
 import {
   IdAndControleProdutoFilter,
-  PostAtualizarDimensoesVolumeDetalhadoParams,
   PostAtualizarDimensoesVolumeNaoDetalhadoLoteParams,
   PostItemConferidoVolume,
 } from './dto/separacao.dto';
@@ -170,58 +169,6 @@ export class SeparacaoService {
     const novoTotal = Number(restante?.[0]?.TOTAL || 0);
 
     await this.normalizarVolumes(numeroConferencia);
-  }
-
-  async postAtualizarDimensoesVolumeDetalhado({
-    numeroConferencia,
-    numeroVolume,
-    largura,
-    comprimento,
-    altura,
-    peso,
-  }: PostAtualizarDimensoesVolumeDetalhadoParams) {
-    const existente = await this.dbExplorerClient.executeQuery(`
-    SELECT NUCUBAGEM
-    FROM AD_CUBAGEM
-    WHERE NUCONF = ${numeroConferencia}
-      AND SEQVOL = ${numeroVolume}
-  `);
-
-    if (existente.length > 0) {
-      await this.datasetSP.save({
-        entityName: 'AD_CUBAGEM',
-        pk: {
-          NUCUBAGEM: existente[0].NUCUBAGEM,
-        },
-        fieldsAndValues: {
-          ALTURA: altura,
-          LARGURA: largura,
-          COMPRIMENTO: comprimento,
-          PESO: peso,
-        },
-      });
-
-      return;
-    }
-    const prox = await this.dbExplorerClient.executeQuery(`
-    SELECT COALESCE(MAX(NUCUBAGEM), 0) + 1 AS PROX
-    FROM AD_CUBAGEM
-  `);
-
-    const nucubagem = prox[0].PROX;
-
-    await this.datasetSP.save({
-      entityName: 'AD_CUBAGEM',
-      fieldsAndValues: {
-        NUCUBAGEM: nucubagem,
-        NUCONF: numeroConferencia,
-        SEQVOL: numeroVolume,
-        ALTURA: altura,
-        LARGURA: largura,
-        COMPRIMENTO: comprimento,
-        PESO: peso,
-      },
-    });
   }
 
   async getItensPedido({ numeroUnico }: NumeroUnicoFilter) {

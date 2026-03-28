@@ -1,14 +1,13 @@
 import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthUserGuard } from 'src/core/guards/auth-user/auth-user.guard';
+import { NumeroConferenciaFilter, NumeroUnicoFilter } from '../dto/model';
 import {
-  PostAtualizarDimensoesVolumeDetalhadoParams,
   PostDevolverItemConferido,
   PostItemConferidoVolume,
   PostRemoverVolumeParams,
 } from './dto/separacao.dto';
 import { SeparacaoService } from './separacao.service';
-import { NumeroConferenciaFilter, NumeroUnicoFilter } from '../dto/model';
 
 @UseGuards(AuthUserGuard)
 @ApiTags('Separacoes')
@@ -37,13 +36,6 @@ export class SeparacaoController {
   @Post('devolver-item-conferido')
   postDevolverItemConferido(@Body() body: PostDevolverItemConferido) {
     return this.service.postDevolverItemConferido(body);
-  }
-
-  @Post('dimensoes-volume')
-  postAtualizarDimensoesVolumeDetalhado(
-    @Body() body: PostAtualizarDimensoesVolumeDetalhadoParams,
-  ) {
-    return this.service.postAtualizarDimensoesVolumeDetalhado(body);
   }
 
   @Post('deletar-volume-lote')

@@ -3,6 +3,7 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthUserGuard } from 'src/core/guards/auth-user/auth-user.guard';
 import { NumeroConferenciaFilter } from '../dto/model';
 import { VolumeService } from './volume.service';
+import { PostAtualizarDimensoesVolumeDetalhadoParams } from './dto/volume.dto';
 
 @UseGuards(AuthUserGuard)
 @ApiTags('Volumes')
@@ -20,5 +21,12 @@ export class VolumeController {
   @ApiOperation({ summary: 'Gerar volumes em lote' })
   postGerarVolumesLote(@Body() body: any) {
     return this.service.gerarVolumesLote(body);
+  }
+
+  @Post('dimensoes-volume')
+  postAtualizarDimensoesVolumeDetalhado(
+    @Body() body: PostAtualizarDimensoesVolumeDetalhadoParams,
+  ) {
+    return this.service.postAtualizarDimensoesVolumeDetalhado(body);
   }
 }

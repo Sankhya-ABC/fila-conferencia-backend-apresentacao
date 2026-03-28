@@ -1,7 +1,41 @@
-import { ApiPropertyOptional, IntersectionType } from '@nestjs/swagger';
-import { IsOptional, IsString } from 'class-validator';
-import {
-  IdUsuarioFilter,
-  NumeroConferenciaFilter,
-  NumeroUnicoFilter,
-} from 'src/modules/dto/model';
+import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+import { IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
+
+export class PostAtualizarDimensoesVolumeDetalhadoParams {
+  @ApiProperty({ example: 1234 })
+  @Type(() => Number)
+  @IsNumber()
+  @IsNotEmpty()
+  numeroConferencia: number;
+
+  @ApiProperty({ example: 1234 })
+  @Type(() => Number)
+  @IsNumber()
+  @IsNotEmpty()
+  numeroVolume: number;
+
+  @ApiProperty({ example: 1234 })
+  @Type(() => Number)
+  @IsNumber()
+  @IsOptional()
+  largura?: number;
+
+  @ApiProperty({ example: 1234 })
+  @Type(() => Number)
+  @IsNumber()
+  @IsOptional()
+  comprimento?: number;
+
+  @ApiProperty({ example: 1234 })
+  @Type(() => Number)
+  @IsNumber()
+  @IsOptional()
+  altura?: number;
+
+  @ApiProperty({ example: 1234 })
+  @Type(() => Number)
+  @IsNumber()
+  @IsOptional()
+  peso?: number;
+}

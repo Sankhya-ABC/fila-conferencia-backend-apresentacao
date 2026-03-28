@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { PostAtualizarDimensoesVolumeDetalhadoParams } from 'src/modules/volume/dto/volume.dto';
 
 // Filter
 
@@ -89,44 +90,6 @@ export class PostDevolverItemConferido {
   @IsString()
   @IsNotEmpty()
   controle: string;
-}
-
-export class PostAtualizarDimensoesVolumeDetalhadoParams {
-  @ApiProperty({ example: 1234 })
-  @Type(() => Number)
-  @IsNumber()
-  @IsNotEmpty()
-  numeroConferencia: number;
-
-  @ApiProperty({ example: 1234 })
-  @Type(() => Number)
-  @IsNumber()
-  @IsNotEmpty()
-  numeroVolume: number;
-
-  @ApiProperty({ example: 1234 })
-  @Type(() => Number)
-  @IsNumber()
-  @IsOptional()
-  largura?: number;
-
-  @ApiProperty({ example: 1234 })
-  @Type(() => Number)
-  @IsNumber()
-  @IsOptional()
-  comprimento?: number;
-
-  @ApiProperty({ example: 1234 })
-  @Type(() => Number)
-  @IsNumber()
-  @IsOptional()
-  altura?: number;
-
-  @ApiProperty({ example: 1234 })
-  @Type(() => Number)
-  @IsNumber()
-  @IsOptional()
-  peso?: number;
 }
 
 export class PostAtualizarDimensoesVolumeNaoDetalhadoLoteParams extends PostAtualizarDimensoesVolumeDetalhadoParams {
