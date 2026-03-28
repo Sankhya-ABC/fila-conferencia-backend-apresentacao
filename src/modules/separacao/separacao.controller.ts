@@ -38,12 +38,6 @@ export class SeparacaoController {
     return this.service.postDevolverItemConferido(body);
   }
 
-  @Post('deletar-volume-lote')
-  @ApiOperation({ summary: 'Deletar volume lote' })
-  postDeletarVolumeLote(@Body() body: any) {
-    return this.service.deletarVolumeLote(body);
-  }
-
   @Get('itens-pedidos')
   @ApiOperation({ summary: 'Listar Itens Pedidos' })
   getItensPedido(@Query() queryParam: NumeroUnicoFilter) {

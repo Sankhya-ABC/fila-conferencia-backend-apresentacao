@@ -277,41 +277,6 @@ export class SeparacaoService {
     return response;
   }
 
-  async deletarVolumeLote({
-    numeroConferencia,
-    altura,
-    largura,
-    comprimento,
-    peso,
-  }) {
-    const sql = `
-    SELECT NUCUBAGEM
-    FROM AD_CUBAGEM
-    WHERE NUCONF = ${numeroConferencia}
-      AND ALTURA = ${altura}
-      AND LARGURA = ${largura}
-      AND COMPRIMENTO = ${comprimento}
-      AND PESO = ${peso}
-  `;
-
-    const rows = await this.dbExplorerClient.executeQuery(sql);
-
-    for (const row of rows) {
-      await this.datasetSP.save({
-        entityName: 'AD_CUBAGEM',
-        pk: {
-          NUCUBAGEM: row.NUCUBAGEM,
-        },
-        fieldsAndValues: {
-          ALTURA: null,
-          LARGURA: null,
-          COMPRIMENTO: null,
-          PESO: null,
-        },
-      });
-    }
-  }
-
   // auxiliares
   async obterCodigosDeBarra({
     idProduto,

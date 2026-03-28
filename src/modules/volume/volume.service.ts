@@ -3,7 +3,11 @@ import { NumeroConferenciaFilter } from '../dto/model';
 import { VolumeHelper } from './volume.helper';
 import { SankhyaDBExplorerSPClient } from 'src/http-client/db-explorer-sp/db-explorer-sp.client';
 import { SankhyaDatasetSPClient } from 'src/http-client/dataset-sp/dataset-sp.client';
-import { PostAtualizarDimensoesVolumeParams } from './dto/volume.dto';
+import {
+  DeletarVolumesLoteParams,
+  GerarVolumesLoteParams,
+  PostAtualizarDimensoesVolumeParams,
+} from './dto/volume.dto';
 
 @Injectable()
 export class VolumeService {
@@ -36,7 +40,7 @@ export class VolumeService {
     largura,
     comprimento,
     peso,
-  }) {
+  }: GerarVolumesLoteParams) {
     const sql = `
     SELECT
       NUCUBAGEM,
@@ -102,6 +106,41 @@ export class VolumeService {
       });
 
       restante--;
+    }
+  }
+
+  async deletarVolumesLote({
+    numeroConferencia,
+    altura,
+    largura,
+    comprimento,
+    peso,
+  }: DeletarVolumesLoteParams) {
+    const sql = `
+      SELECT NUCUBAGEM
+      FROM AD_CUBAGEM
+      WHERE NUCONF = ${numeroConferencia}
+        AND ALTURA = ${altura}
+        AND LARGURA = ${largura}
+        AND COMPRIMENTO = ${comprimento}
+        AND PESO = ${peso}
+    `;
+
+    const rows = await this.dbExplorerClient.executeQuery(sql);
+
+    for (const row of rows) {
+      await this.datasetSP.save({
+        entityName: 'AD_CUBAGEM',
+        pk: {
+          NUCUBAGEM: row.NUCUBAGEM,
+        },
+        fieldsAndValues: {
+          ALTURA: null,
+          LARGURA: null,
+          COMPRIMENTO: null,
+          PESO: null,
+        },
+      });
     }
   }
 

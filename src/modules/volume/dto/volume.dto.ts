@@ -76,3 +76,19 @@ export class PostAtualizarDimensoesVolumeNaoDetalhadoLoteParams extends OmitType
 }
 
 export class PostAtualizarDimensoesVolumeParams extends PostAtualizarDimensoesVolumeNaoDetalhadoLoteParams {}
+
+export class GerarVolumesLoteParams extends OmitType(
+  PostAtualizarDimensoesVolumeDetalhadoParams,
+  ['numeroVolume'],
+) {
+  @ApiProperty({ example: 1234 })
+  @Type(() => Number)
+  @IsNumber()
+  @IsNotEmpty()
+  quantidadeLote: number;
+}
+
+export class DeletarVolumesLoteParams extends OmitType(
+  PostAtualizarDimensoesVolumeDetalhadoParams,
+  ['numeroVolume'],
+) {}

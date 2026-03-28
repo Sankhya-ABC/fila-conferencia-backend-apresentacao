@@ -4,6 +4,7 @@ import { AuthUserGuard } from 'src/core/guards/auth-user/auth-user.guard';
 import { NumeroConferenciaFilter } from '../dto/model';
 import { VolumeService } from './volume.service';
 import {
+  DeletarVolumesLoteParams,
   PostAtualizarDimensoesVolumeDetalhadoParams,
   PostAtualizarDimensoesVolumeParams,
 } from './dto/volume.dto';
@@ -24,6 +25,12 @@ export class VolumeController {
   @ApiOperation({ summary: 'Gerar volumes em lote' })
   postGerarVolumesLote(@Body() body: any) {
     return this.service.gerarVolumesLote(body);
+  }
+
+  @Post('deletar-volumes-lote')
+  @ApiOperation({ summary: 'Deletar volume lote' })
+  postDeletarVolumesLote(@Body() body: DeletarVolumesLoteParams) {
+    return this.service.deletarVolumesLote(body);
   }
 
   @Post('dimensoes-volume')
