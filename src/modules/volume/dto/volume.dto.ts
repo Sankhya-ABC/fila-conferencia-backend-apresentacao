@@ -39,3 +39,29 @@ export class PostAtualizarDimensoesVolumeDetalhadoParams {
   @IsOptional()
   peso?: number;
 }
+
+export class PostAtualizarDimensoesVolumeNaoDetalhadoLoteParams extends PostAtualizarDimensoesVolumeDetalhadoParams {
+  @ApiProperty({ example: 1234 })
+  @Type(() => Number)
+  @IsNumber()
+  @IsOptional()
+  alturaAntiga?: number;
+
+  @ApiProperty({ example: 1234 })
+  @Type(() => Number)
+  @IsNumber()
+  @IsOptional()
+  larguraAntiga?: number;
+
+  @ApiProperty({ example: 1234 })
+  @Type(() => Number)
+  @IsNumber()
+  @IsOptional()
+  comprimentoAntigo?: number;
+
+  @ApiProperty({ example: 1234 })
+  @Type(() => Number)
+  @IsNumber()
+  @IsOptional()
+  pesoAntigo?: number;
+}

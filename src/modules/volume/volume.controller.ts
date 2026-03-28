@@ -29,4 +29,10 @@ export class VolumeController {
   ) {
     return this.service.postAtualizarDimensoesVolumeDetalhado(body);
   }
+
+  @Post('dimensoes-volume-lote')
+  @ApiOperation({ summary: 'Atualizar dimensões de lote de volumes' })
+  postAtualizarDimensoesVolumeNaoDetalhadoLote(@Body() body: any) {
+    return this.service.postAtualizarDimensoesVolumeNaoDetalhadoLote(body);
+  }
 }

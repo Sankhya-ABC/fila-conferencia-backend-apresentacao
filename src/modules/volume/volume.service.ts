@@ -3,7 +3,10 @@ import { NumeroConferenciaFilter } from '../dto/model';
 import { VolumeHelper } from './volume.helper';
 import { SankhyaDBExplorerSPClient } from 'src/http-client/db-explorer-sp/db-explorer-sp.client';
 import { SankhyaDatasetSPClient } from 'src/http-client/dataset-sp/dataset-sp.client';
-import { PostAtualizarDimensoesVolumeDetalhadoParams } from './dto/volume.dto';
+import {
+  PostAtualizarDimensoesVolumeDetalhadoParams,
+  PostAtualizarDimensoesVolumeNaoDetalhadoLoteParams,
+} from './dto/volume.dto';
 
 @Injectable()
 export class VolumeService {
@@ -157,5 +160,44 @@ export class VolumeService {
         PESO: peso,
       },
     });
+  }
+
+  async postAtualizarDimensoesVolumeNaoDetalhadoLote({
+    numeroConferencia,
+    alturaAntiga,
+    larguraAntiga,
+    comprimentoAntigo,
+    pesoAntigo,
+    altura,
+    largura,
+    comprimento,
+    peso,
+  }: PostAtualizarDimensoesVolumeNaoDetalhadoLoteParams) {
+    const sql = `
+      SELECT NUCUBAGEM
+      FROM AD_CUBAGEM
+      WHERE NUCONF = ${numeroConferencia}
+        AND ALTURA = ${alturaAntiga}
+        AND LARGURA = ${larguraAntiga}
+        AND COMPRIMENTO = ${comprimentoAntigo}
+        AND PESO = ${pesoAntigo}
+    `;
+
+    const rows = await this.dbExplorerClient.executeQuery(sql);
+
+    for (const row of rows) {
+      await this.datasetSP.save({
+        entityName: 'AD_CUBAGEM',
+        pk: {
+          NUCUBAGEM: row.NUCUBAGEM,
+        },
+        fieldsAndValues: {
+          ALTURA: altura,
+          LARGURA: largura,
+          COMPRIMENTO: comprimento,
+          PESO: peso,
+        },
+      });
+    }
   }
 }

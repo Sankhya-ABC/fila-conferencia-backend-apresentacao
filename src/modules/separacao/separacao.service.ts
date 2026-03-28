@@ -5,7 +5,6 @@ import { ArquivoHelper } from '../arquivo/arquivo.helper';
 import { NumeroConferenciaFilter, NumeroUnicoFilter } from '../dto/model';
 import {
   IdAndControleProdutoFilter,
-  PostAtualizarDimensoesVolumeNaoDetalhadoLoteParams,
   PostItemConferidoVolume,
 } from './dto/separacao.dto';
 
@@ -308,45 +307,6 @@ export class SeparacaoService {
           LARGURA: null,
           COMPRIMENTO: null,
           PESO: null,
-        },
-      });
-    }
-  }
-
-  async postAtualizarDimensoesVolumeNaoDetalhadoLote({
-    numeroConferencia,
-    alturaAntiga,
-    larguraAntiga,
-    comprimentoAntigo,
-    pesoAntigo,
-    altura,
-    largura,
-    comprimento,
-    peso,
-  }: PostAtualizarDimensoesVolumeNaoDetalhadoLoteParams) {
-    const sql = `
-    SELECT NUCUBAGEM
-    FROM AD_CUBAGEM
-    WHERE NUCONF = ${numeroConferencia}
-      AND ALTURA = ${alturaAntiga}
-      AND LARGURA = ${larguraAntiga}
-      AND COMPRIMENTO = ${comprimentoAntigo}
-      AND PESO = ${pesoAntigo}
-  `;
-
-    const rows = await this.dbExplorerClient.executeQuery(sql);
-
-    for (const row of rows) {
-      await this.datasetSP.save({
-        entityName: 'AD_CUBAGEM',
-        pk: {
-          NUCUBAGEM: row.NUCUBAGEM,
-        },
-        fieldsAndValues: {
-          ALTURA: altura,
-          LARGURA: largura,
-          COMPRIMENTO: comprimento,
-          PESO: peso,
         },
       });
     }

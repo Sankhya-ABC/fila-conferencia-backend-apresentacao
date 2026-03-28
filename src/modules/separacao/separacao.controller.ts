@@ -44,12 +44,6 @@ export class SeparacaoController {
     return this.service.deletarVolumeLote(body);
   }
 
-  @Post('dimensoes-volume-lote')
-  @ApiOperation({ summary: 'Atualizar dimensões de lote de volumes' })
-  postAtualizarDimensoesVolumeNaoDetalhadoLote(@Body() body: any) {
-    return this.service.postAtualizarDimensoesVolumeNaoDetalhadoLote(body);
-  }
-
   @Get('itens-pedidos')
   @ApiOperation({ summary: 'Listar Itens Pedidos' })
   getItensPedido(@Query() queryParam: NumeroUnicoFilter) {
