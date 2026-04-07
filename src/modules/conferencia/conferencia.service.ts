@@ -18,6 +18,9 @@ export class ConferenciaService {
 
   async getFilaConferencias(queryParams: FilaConferenciaFilter) {
     const conditions: string[] = [];
+    const page = Number(queryParams.page ?? 0);
+    const perPage = Number(queryParams.perPage ?? 15);
+    const offset = page * perPage;
 
     if (queryParams.codigoStatus) {
       const list = queryParams.codigoStatus
@@ -180,9 +183,23 @@ export class ConferenciaService {
     AND OPC_TIPOENTREGA.VALOR = CAB.AD_TIPOENTREGA 
 
     ${whereClause}
+
+    ORDER BY CAB.NUNOTA DESC
+    OFFSET ${offset} ROWS
+    FETCH NEXT ${perPage} ROWS ONLY
   `;
-    const response = await this.dbExplorerClient.executeQuery(sql);
-    return response;
+    const data = await this.dbExplorerClient.executeQuery(sql);
+
+    const countSql = `
+      SELECT COUNT(*) as total
+      FROM TGFCAB CAB
+      ${whereClause}
+    `;
+
+    const totalResult = await this.dbExplorerClient.executeQuery(countSql);
+    const total = totalResult[0]?.total ?? 0;
+
+    return { data, total };
   }
 
   async getDadosBasicos({ numeroUnico }: NumeroUnicoFilter) {

@@ -1,6 +1,6 @@
-import { ApiProperty, IntersectionType } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class NumeroUnicoFilter {
   @ApiProperty({ example: 1234 })
@@ -39,4 +39,16 @@ export class ControleFilter {
   @IsString()
   @IsNotEmpty()
   controle: string;
+}
+
+export class PaginationFilter {
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  page?: string;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  perPage?: string;
 }
