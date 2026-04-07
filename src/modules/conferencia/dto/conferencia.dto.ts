@@ -4,9 +4,10 @@ import {
   IdUsuarioFilter,
   NumeroConferenciaFilter,
   NumeroUnicoFilter,
+  PaginationFilter,
 } from 'src/modules/dto/model';
 
-export class FilaConferenciaFilter {
+export class FilaConferenciaFilter extends PaginationFilter {
   @ApiPropertyOptional()
   @IsString()
   @IsOptional()
