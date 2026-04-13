@@ -13,4 +13,16 @@ export class AuthController {
   login(@Body() body: LoginRequest) {
     return this.service.login(body);
   }
+
+  @Post('esqueci-minha-senha')
+  async esqueciMinhaSenha(@Body('email') email: string) {
+    await this.service.esqueciMinhaSenha(email);
+  }
+
+  @Post('redefinir-senha')
+  async redefinirSenha(
+    @Body() body: { email: string; token: string; senha: string },
+  ) {
+    return this.service.redefinirSenha(body.email, body.token, body.senha);
+  }
 }

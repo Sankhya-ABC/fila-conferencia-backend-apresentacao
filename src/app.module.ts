@@ -16,6 +16,9 @@ import { LoggerModule } from './core/logger/logger.module';
 import { LoggerInterceptor } from './core/logger/logger.interceptor';
 import { ArquivoModule } from './modules/arquivo/arquivo.module';
 import { VolumeModule } from './modules/volume/volume.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { SincronizacaoModule } from './modules/sincronizacao/sincronizacao.module';
+import { UsuarioModule } from './modules/usuario/usuario.module';
 
 @Module({
   imports: [
@@ -25,8 +28,10 @@ import { VolumeModule } from './modules/volume/volume.module';
     ParceiroModule,
     EmpresaModule,
     SeparacaoModule,
+    SincronizacaoModule,
     ArquivoModule,
     VolumeModule,
+    UsuarioModule,
     AuthModule,
     LoggerModule,
     ConfigModule.forRoot({
@@ -34,6 +39,7 @@ import { VolumeModule } from './modules/volume/volume.module';
       load: [envMapping],
       validationSchema: envSchema,
     }),
+    ScheduleModule.forRoot(),
   ],
   controllers: [AppController],
   providers: [

@@ -1,0 +1,33 @@
+services:
+  app:
+    build: .
+    container_name: nest-app
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+      - '5555:5555'
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/fila_conferencia
+      CHOKIDAR_USEPOLLING: 'true'
+    command: sh -c "npm install && npx prisma generate && npm run start:dev"
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15
+    container_name: postgres-db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: fila_conferencia
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

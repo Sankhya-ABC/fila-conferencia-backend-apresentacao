@@ -8,6 +8,9 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { LoggerInterceptor } from './core/logger/logger.interceptor';
 
+import { webcrypto } from 'crypto';
+(global as any).crypto = webcrypto;
+
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
@@ -17,7 +20,7 @@ async function bootstrap() {
   app.enableCors({
     origin: ['http://localhost:4200', 'http://163.176.239.42'],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-show-success'],
     credentials: true,
   });
 

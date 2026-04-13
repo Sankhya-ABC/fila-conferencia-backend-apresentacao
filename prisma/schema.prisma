@@ -1,0 +1,33 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Perfil {
+  ADMINISTRADOR
+  SEPARADOR
+}
+
+model User {
+  id           String   @id @default(uuid())
+  
+  codigo       Int      @unique
+  nome         String
+  email        String   @unique
+  foto         String?
+  perfil       Perfil
+
+  senha        String?
+  ativo        Boolean  @default(false)
+
+  resetToken      String? 
+  resetTokenExp   DateTime?
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}

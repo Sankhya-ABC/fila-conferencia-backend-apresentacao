@@ -1,0 +1,25 @@
+import { Module } from '@nestjs/common';
+import { AuthAppModule } from 'src/core/guards/auth-app/auth-app.module';
+import { AuthUserModule } from 'src/core/guards/auth-user/auth-user.module';
+import { SankhyaDatasetSPClientModule } from 'src/http-client/dataset-sp/dataset-sp.module';
+import { GatewayClientModule } from 'src/http-client/gateway/gateway.module';
+import { UsuarioController } from './usuario.controller';
+import { UsuarioService } from './usuario.service';
+import { PrismaModule } from 'prisma/prisma.module';
+import { AuthModule } from '../auth/auth.module';
+import { SincronizacaoModule } from '../sincronizacao/sincronizacao.module';
+
+@Module({
+  controllers: [UsuarioController],
+  providers: [UsuarioService],
+  imports: [
+    GatewayClientModule,
+    AuthAppModule,
+    AuthUserModule,
+    AuthModule,
+    SankhyaDatasetSPClientModule,
+    PrismaModule,
+    SincronizacaoModule,
+  ],
+})
+export class UsuarioModule {}
