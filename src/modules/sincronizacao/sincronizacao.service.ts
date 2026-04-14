@@ -34,7 +34,9 @@ export class SincronizacaoService {
         email: data.email,
         foto: data.foto,
         perfil:
-          data.nomeGrupo?.trim() === 'ADMINISTRADOR'
+          data.nomeGrupo?.trim() === 'ADMINISTRADOR' ||
+          data.nomeGrupo?.trim() === 'DIRETORIA' ||
+          data.nomeGrupo?.trim() === ''
             ? 'ADMINISTRADOR'
             : 'SEPARADOR',
       }));
@@ -49,7 +51,15 @@ export class SincronizacaoService {
               foto: usuario.foto,
               perfil: usuario.perfil,
             },
-            create: usuario,
+            create: {
+              ...usuario,
+              ativo:
+                usuario.perfil === 'ADMINISTRADOR' ||
+                usuario.perfil === 'DIRETORIA' ||
+                usuario.perfil === ''
+                  ? true
+                  : false,
+            },
           }),
         ),
       );
