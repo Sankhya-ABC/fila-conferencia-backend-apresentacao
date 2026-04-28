@@ -1,7 +1,7 @@
 services:
   app:
     build: .
-    container_name: fila-conf-postgres    
+    container_name: fila-conf-app   
     restart: unless-stopped
     ports:
       - '3000:3000'
