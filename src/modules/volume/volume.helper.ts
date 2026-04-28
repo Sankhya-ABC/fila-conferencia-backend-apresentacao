@@ -20,8 +20,8 @@ export class VolumeHelper {
     try {
       const sql = `
       SELECT 
-      CAB.TIPMOV AS codigoTipoMovimento, 
-      TPO.DESCROPER AS descricaoTipoOperacao 
+      CAB.TIPMOV AS "codigoTipoMovimento", 
+      TPO.DESCROPER AS "descricaoTipoOperacao" 
 
       FROM TGFCAB CAB 
 
@@ -53,11 +53,11 @@ export class VolumeHelper {
   }: NumeroConferenciaFilter) {
     const sql = `
     SELECT
-      COUNT(*) AS quantidadeLote,
-      CUB.ALTURA AS altura,
-      CUB.LARGURA AS largura,
-      CUB.COMPRIMENTO AS comprimento,
-      CUB.PESO AS peso
+      COUNT(*) AS "quantidadeLote",
+      CUB.ALTURA AS "altura",
+      CUB.LARGURA AS "largura",
+      CUB.COMPRIMENTO AS "comprimento",
+      CUB.PESO AS "peso"
     FROM AD_CUBAGEM CUB
     WHERE CUB.NUCONF = ${numeroConferencia}
     AND (
@@ -91,12 +91,12 @@ export class VolumeHelper {
   async obterVolumesDetalhados({ numeroConferencia }: NumeroConferenciaFilter) {
     const sql = `
     SELECT 
-      IVC.SEQVOL AS numeroVolume,
-      IVC.CODPROD AS idProduto,
-      PRO.DESCRPROD AS descricaoProduto,
-      IVC.QTD AS quantidadeConvertida,
-      IVC.CODVOL AS unidade,
-      COALESCE(IVC.CONTROLE,' ') AS controle,
+      IVC.SEQVOL AS "numeroVolume",
+      IVC.CODPROD AS "idProduto",
+      PRO.DESCRPROD AS "descricaoProduto",
+      IVC.QTD AS "quantidadeConvertida",
+      IVC.CODVOL AS "unidade",
+      COALESCE(IVC.CONTROLE,' ') AS "controle",
 
       ITE.QTDNEG,
 
@@ -105,12 +105,12 @@ export class VolumeHelper {
         WHEN VOA.DIVIDEMULTIPLICA = 'D' THEN ITE.QTDNEG * VOA.QUANTIDADE
         WHEN VOA.DIVIDEMULTIPLICA = 'M' THEN ITE.QTDNEG / VOA.QUANTIDADE
         ELSE ITE.QTDNEG
-      END AS QTD_CONVERTIDA_PEDIDO,
+      END AS "QTD_CONVERTIDA_PEDIDO",
 
-      CUB.ALTURA      AS altura,
-      CUB.LARGURA     AS largura,
-      CUB.COMPRIMENTO AS comprimento,
-      CUB.PESO        AS peso
+      CUB.ALTURA      AS "altura",
+      CUB.LARGURA     AS "largura",
+      CUB.COMPRIMENTO AS "comprimento",
+      CUB.PESO        AS "peso"
 
     FROM TGFIVC IVC
 
@@ -208,7 +208,7 @@ export class VolumeHelper {
 
   async obterProximoIdCubagem() {
     const sql = `
-    SELECT COALESCE(MAX(NUCUBAGEM), 0) + 1 AS NUCUBAGEM
+    SELECT COALESCE(MAX(NUCUBAGEM), 0) + 1 AS "NUCUBAGEM"
     FROM AD_CUBAGEM
   `;
 

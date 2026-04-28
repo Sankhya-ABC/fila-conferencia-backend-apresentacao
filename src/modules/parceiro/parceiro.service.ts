@@ -10,9 +10,9 @@ export class ParceiroService {
     const { search } = queryParams;
     const sql = `
     SELECT 
-    PAR.CODPARC AS id, 
-    PAR.RAZAOSOCIAL AS nome, 
-    PAR.CGC_CPF AS cpfCnpj 
+    PAR.CODPARC AS "id", 
+    PAR.RAZAOSOCIAL AS "nome", 
+    PAR.CGC_CPF AS "cpfCnpj" 
     FROM TGFPAR PAR 
     WHERE 
     UPPER(PAR.RAZAOSOCIAL) LIKE UPPER('%${search}%') 

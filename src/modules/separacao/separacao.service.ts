@@ -164,10 +164,10 @@ export class SeparacaoService {
   async getItensPedido({ numeroUnico }: NumeroUnicoFilter) {
     const sql = `
     SELECT 
-        ITE.CODPROD AS idProduto,
-        PRO.DESCRPROD AS nomeProduto,
+        ITE.CODPROD AS "idProduto",
+        PRO.DESCRPROD AS "nomeProduto",
 
-        ROUND(ITE.QTDNEG,5) AS quantidadeBase,
+        ROUND(ITE.QTDNEG,5) AS "quantidadeBase",
 
         ROUND(
           CASE 
@@ -176,9 +176,9 @@ export class SeparacaoService {
             WHEN VOA.DIVIDEMULTIPLICA = 'M' THEN ITE.QTDNEG / VOA.QUANTIDADE
             ELSE ITE.QTDNEG
           END
-        ,5) AS quantidadeConvertida,
+        ,5) AS "quantidadeConvertida",
 
-        ROUND(COALESCE(ITE.QTDCONFERIDA,0),5) AS quantidadeBaseConferida,
+        ROUND(COALESCE(ITE.QTDCONFERIDA,0),5) AS "quantidadeBaseConferida",
 
         ROUND(
           CASE 
@@ -187,18 +187,18 @@ export class SeparacaoService {
             WHEN VOA.DIVIDEMULTIPLICA = 'M' THEN COALESCE(ITE.QTDCONFERIDA,0) / VOA.QUANTIDADE
             ELSE COALESCE(ITE.QTDCONFERIDA,0)
           END
-        ,5) AS quantidadeConvertidaConferida,
+        ,5) AS "quantidadeConvertidaConferida",
 
-        ITE.CODVOL AS unidade,
+        ITE.CODVOL AS "unidade",
 
-        PRO.CODMARCA AS idMarca,
-        PRO.MARCA AS nomeMarca,
+        PRO.CODMARCA AS "idMarca",
+        PRO.MARCA AS "nomeMarca",
 
-        PAR.CODPARC AS idFornecedor,
-        PAR.NOMEPARC AS nomeFornecedor,
+        PAR.CODPARC AS "idFornecedor",
+        PAR.NOMEPARC AS "nomeFornecedor",
 
-        COALESCE(ITE.CONTROLE,' ') AS controle,
-        PRO.COMPLDESC AS complemento
+        COALESCE(ITE.CONTROLE,' ') AS "controle",
+        PRO.COMPLDESC AS "complemento"
 
     FROM TGFITE ITE
 
@@ -254,9 +254,9 @@ export class SeparacaoService {
   async getItensConferidos({ numeroConferencia }: NumeroConferenciaFilter) {
     const sql = `
     SELECT
-      CODPROD AS idProduto,
-      CONTROLE AS controle,
-      SUM(QTD) AS quantidadeConvertida
+      CODPROD AS "idProduto",
+      CONTROLE AS "controle",
+      SUM(QTD) AS "quantidadeConvertida"
 
     FROM TGFIVC
 

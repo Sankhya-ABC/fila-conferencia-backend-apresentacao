@@ -8,8 +8,8 @@ export class DominioService {
   async getStatus() {
     const sql = `
     SELECT 
-    OPC.VALOR AS codigo, 
-    OPC.OPCAO AS descricao 
+    OPC.VALOR AS "codigo", 
+    OPC.OPCAO AS "descricao" 
 
     FROM TDDOPC OPC 
 
@@ -24,8 +24,8 @@ export class DominioService {
   async getTipoMovimento() {
     const sql = `
     SELECT 
-    OPC.VALOR AS codigo, 
-    OPC.OPCAO AS descricao 
+    OPC.VALOR AS "codigo", 
+    OPC.OPCAO AS "descricao" 
 
     FROM TDDOPC OPC 
 
@@ -40,8 +40,8 @@ export class DominioService {
   async getTipoOperacao() {
     const sql = `
     SELECT 
-    TPO.CODTIPOPER AS codigo, 
-    TPO.DESCROPER AS descricao 
+    TPO.CODTIPOPER AS "codigo", 
+    TPO.DESCROPER AS "descricao" 
 
     FROM TGFTOP TPO 
 
@@ -61,8 +61,8 @@ export class DominioService {
   async getTipoEntrega() {
     const sql = `
     SELECT 
-    OPC.VALOR AS codigo, 
-    OPC.OPCAO AS descricao 
+    OPC.VALOR AS "codigo", 
+    OPC.OPCAO AS "descricao" 
 
     FROM TDDOPC OPC 
 

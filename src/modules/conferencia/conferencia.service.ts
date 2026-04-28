@@ -40,10 +40,6 @@ export class ConferenciaService {
       conditions.push(`CAB.NUMNOTA = ${queryParams.numeroNota}`);
     }
 
-    if (queryParams.numeroModial) {
-      conditions.push(`CAB.AD_NUMTALAO = ${queryParams.numeroModial}`);
-    }
-
     if (queryParams.numeroUnico) {
       conditions.push(`CAB.NUNOTA = ${queryParams.numeroUnico}`);
     }
@@ -87,12 +83,6 @@ export class ConferenciaService {
         .split(',')
         .map((s) => s.trim())
         .filter(Boolean);
-
-      if (list.length) {
-        conditions.push(`
-          CAB.AD_TIPOENTREGA IN (${list.map((s) => `'${s}'`).join(',')})
-        `);
-      }
     }
 
     if (queryParams.dataInicio) {
@@ -113,41 +103,37 @@ export class ConferenciaService {
 
     const sql = `
     SELECT 
-    CAB.NUNOTA AS numeroUnico, 
-    CAB.NUMNOTA AS numeroNota, 
-    CAB.AD_NUMTALAO AS numeroModial, 
-    CAB.NUCONFATUAL AS numeroConferencia, 
+    CAB.NUNOTA AS "numeroUnico", 
+    CAB.NUMNOTA AS "numeroNota", 
+    CAB.NUCONFATUAL AS "numeroConferencia", 
 
-    CAB.VLRNOTA AS valorNota, 
-    CAB.VOLUME AS volume, 
-    CAB.DTMOV AS dataMovimento, 
+    CAB.VLRNOTA AS "valorNota", 
+    CAB.VOLUME AS "volume", 
+    CAB.DTMOV AS "dataMovimento", 
 
-    sankhya.SNK_GET_SATUSCONFERENCIA(CAB.NUNOTA) AS codigoStatus, 
-    OPC_STATUSCONF.OPCAO AS descricaoStatus, 
+    sankhya.SNK_GET_SATUSCONFERENCIA(CAB.NUNOTA) AS "codigoStatus", 
+    OPC_STATUSCONF.OPCAO AS "descricaoStatus", 
 
-    CAB.TIPMOV AS codigoTipoMovimento, 
-    OPC_TIPMOV.OPCAO AS descricaoTipoMovimento, 
+    CAB.TIPMOV AS "codigoTipoMovimento", 
+    OPC_TIPMOV.OPCAO AS "descricaoTipoMovimento", 
 
-    TPO.CODTIPOPER AS codigoTipoOperacao, 
-    TPO.DESCROPER AS descricaoTipoOperacao, 
+    TPO.CODTIPOPER AS "codigoTipoOperacao", 
+    TPO.DESCROPER AS "descricaoTipoOperacao", 
 
-    CAB.AD_TIPOENTREGA AS codigoTipoEntrega, 
-    OPC_TIPOENTREGA.OPCAO AS descricaoTipoEntrega, 
+    EMP.CODEMP AS "idEmpresa", 
+    EMP.RAZAOSOCIAL AS "nomeEmpresa", 
 
-    EMP.CODEMP AS idEmpresa, 
-    EMP.RAZAOSOCIAL AS nomeEmpresa, 
+    PAR.CODPARC AS "idParceiro", 
+    PAR.RAZAOSOCIAL AS "nomeParceiro", 
 
-    PAR.CODPARC AS idParceiro, 
-    PAR.RAZAOSOCIAL AS nomeParceiro, 
+    VEN.CODVEND AS "idVendedor", 
+    VEN.APELIDO AS "nomeVendedor", 
 
-    VEN.CODVEND AS idVendedor, 
-    VEN.APELIDO AS nomeVendedor, 
+    CAB.CODUSUINC AS "idUsuarioInclusao", 
+    USU_INC.NOMEUSU AS "nomeUsuarioInclusao", 
 
-    CAB.CODUSUINC AS idUsuarioInclusao, 
-    USU_INC.NOMEUSU AS nomeUsuarioInclusao, 
-
-    CAB.CODUSU AS idUsuarioAlteracao, 
-    USU_ALT.NOMEUSU AS nomeUsuarioAlteracao 
+    CAB.CODUSU AS "idUsuarioAlteracao", 
+    USU_ALT.NOMEUSU AS "nomeUsuarioAlteracao" 
 
     FROM TGFCAB CAB 
     
@@ -178,10 +164,6 @@ export class ConferenciaService {
     ON OPC_STATUSCONF.NUCAMPO = 64923 
     AND OPC_STATUSCONF.VALOR = sankhya.SNK_GET_SATUSCONFERENCIA(CAB.NUNOTA) 
 
-    LEFT JOIN TDDOPC OPC_TIPOENTREGA 
-    ON OPC_TIPOENTREGA.NUCAMPO = 9999990877 
-    AND OPC_TIPOENTREGA.VALOR = CAB.AD_TIPOENTREGA 
-
     ${whereClause}
 
     ORDER BY CAB.NUNOTA DESC
@@ -205,20 +187,19 @@ export class ConferenciaService {
   async getDadosBasicos({ numeroUnico }: NumeroUnicoFilter) {
     const sql = `
       SELECT 
-      CAB.NUNOTA AS numeroUnico, 
-      CAB.NUMNOTA AS numeroNota, 
-      CAB.AD_NUMTALAO AS numeroModial, 
-      CAB.NUCONFATUAL AS numeroConferencia, 
+      CAB.NUNOTA AS "numeroUnico", 
+      CAB.NUMNOTA AS "numeroNota", 
+      CAB.NUCONFATUAL AS "numeroConferencia", 
   
-      sankhya.SNK_GET_SATUSCONFERENCIA(CAB.NUNOTA) AS codigoStatus, 
-      CAB.TIPMOV AS codigoTipoMovimento, 
-      TPO.DESCROPER AS descricaoTipoOperacao, 
+      sankhya.SNK_GET_SATUSCONFERENCIA(CAB.NUNOTA) AS "codigoStatus", 
+      CAB.TIPMOV AS "codigoTipoMovimento", 
+      TPO.DESCROPER AS "descricaoTipoOperacao", 
   
-      PAR.CODPARC AS idParceiro, 
-      PAR.RAZAOSOCIAL AS nomeParceiro, 
+      PAR.CODPARC AS "idParceiro", 
+      PAR.RAZAOSOCIAL AS "nomeParceiro", 
   
-      VEN.CODVEND AS idVendedor, 
-      VEN.APELIDO AS nomeVendedor 
+      VEN.CODVEND AS "idVendedor", 
+      VEN.APELIDO AS "nomeVendedor" 
   
       FROM TGFCAB CAB 
   

@@ -10,9 +10,9 @@ export class EmpresaService {
     const { search } = queryParams;
     const sql = `
       SELECT 
-        EMP.CODEMP AS id,
-        EMP.RAZAOSOCIAL AS nome,
-        EMP.CGC AS cpfCnpj
+        EMP.CODEMP AS "id",
+        EMP.RAZAOSOCIAL AS "nome",
+        EMP.CGC AS "cpfCnpj"
       FROM TSIEMP EMP
       WHERE
         UPPER(EMP.RAZAOSOCIAL) LIKE UPPER('%${search}%')
