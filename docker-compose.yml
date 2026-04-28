@@ -18,7 +18,8 @@ services:
 
   db:
     image: postgres:15
-    container_name: fila-conf-postgres    restart: always
+    container_name: fila-conf-postgres
+    restart: always
     ports:
     - "5432:5432"
     environment:
