@@ -1,8 +1,7 @@
 services:
   app:
     build: .
-    container_name: nest-app
-    restart: unless-stopped
+    container_name: fila-conf-postgres    restart: unless-stopped
     ports:
       - '3000:3000'
       - '5555:5555'
@@ -18,8 +17,7 @@ services:
 
   db:
     image: postgres:15
-    container_name: postgres-db
-    restart: always
+    container_name: fila-conf-postgres    restart: always
     ports:
     - "5432:5432"
     environment:
